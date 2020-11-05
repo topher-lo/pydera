@@ -86,10 +86,33 @@ class DERA(ABC):
         self._paths = None
         self._datasets = None
 
-    @staticmethod
-    def to_dataframe(path, sep=',', *args, **kwargs):
-        """Converts and concats along index into a single Pandas DataFrame
-        all .csv or .tsv datasets in path. Returns DataFrame.
+    @classmethod
+    def to_dataframe(cls, path: str, sep='\t', table='sub' *args, **kwargs):
+        """Converts and concantenates (along index) all datasets with the same
+        fields (i.e. all of the same table type e.g. sub.tsv)
+        into a single Pandas DataFrame. Returns DataFrame.
+
+        Args:
+            path: str
+                Path to datasets.
+
+            sep: 
+                Defaults to tab regex deliminator '\t'. 
+                Delimiter to use to read datasets. 
+                See pandas.read_csv() documentation.
+
+            table:
+                DERA table type to convert to DataFrame.
+                See corresponding docstring in concrete 
+                classes for link to documentation
+                of the associated DERA dataset.
+
+        Returns:
+            DataFrame of concatenated datasets.
+
+        Raises:
+
+
         """
         datasets = [pd.read_csv(f'{path}/{f}', sep) for f in os.listdir(path)]
         return pd.concat(datasets)
@@ -104,8 +127,8 @@ class DERA(ABC):
 
 class MutualFunds(DERA):
     """Concrete implementation of DERA.
-    Download and process the Mutual Fund Prospectus Risk / Return 
-    Summary Datasets.
+    Download and process DERA's "Mutual Fund Prospectus Risk / Return 
+    Summary" Datasets.
     
     Datasets are found at:
     https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
