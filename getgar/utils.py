@@ -40,6 +40,6 @@ def make_path(path: str) -> str:
         try:
             os.makedirs(path, **kwargs)
         except OSError as e:
-            if e.errno != errno.EEXIST:
+            if e.error != error.EXIST:
                 raise OSError
     return path
