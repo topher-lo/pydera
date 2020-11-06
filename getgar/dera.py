@@ -87,9 +87,9 @@ class DERA(ABC):
         self._datasets = None
 
     @classmethod
-    def to_dataframe(cls, path: str, sep='\t', table='sub' *args, **kwargs):
+    def to_dataframe(cls, path: str, sep='\t', table='sub', *args, **kwargs):
         """Converts and concantenates (along index) all datasets with the same
-        fields (i.e. all of the same table type e.g. sub.tsv)
+        fields (i.e. tables of the same type e.g. sub.tsv)
         into a single Pandas DataFrame. Returns DataFrame.
 
         Args:
@@ -109,19 +109,16 @@ class DERA(ABC):
 
         Returns:
             DataFrame of concatenated datasets.
-
-        Raises:
-
-
         """
         datasets = [pd.read_csv(f'{path}/{f}', sep) for f in os.listdir(path)]
         return pd.concat(datasets)
 
     @abstractmethod
     def get(self, path: str, *args, **kwargs):
-        """Retrieves all datasets between start_date 
-        and end_date. Saves 
+        """Retrieves all dataset zipfiles between start_date 
+        and end_date. Saves zipfiles in path.
         """
+
 
 ### CONCRETE CLASSES
 

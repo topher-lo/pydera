@@ -1,11 +1,11 @@
 import pytest
 
-from secnlp.dera import DERA
+from getgar.dera import DERA
 
 
 ### TESTCASES
 
-TEST_DATA_PATH = 'secnlp/tests/data/'
+TEST_DATA_PATH = 'getgar/tests/data/'
 
 TESTCASES = {
     'DERA_to_dataframe': [{'args': None}],
@@ -42,7 +42,7 @@ def test_DERA_to_dataframe(DERA_to_dataframe_params):
 
 
 def test_MutualFund_get(MutualFund_get_params):
-    """Gets 
+    """ 
     """
     pass
 

@@ -5,6 +5,7 @@ from zipfile import ZipFile
 from typing import Union
 from typing import List
 
+
 def unzip(zipfile: Union[ZipFile, str], filename: Union[str, List[str]], path: str) -> None:
     """Unzip, extract, and save content of a zip file.
 
@@ -38,8 +39,8 @@ def make_path(path: str) -> str:
     """
     if not os.path.exists(path):
         try:
-            os.makedirs(path, **kwargs)
+            os.makedirs(path)
         except OSError as e:
-            if e.error != error.EXIST:
+            if e.error != e.EXIST:
                 raise OSError
     return path
