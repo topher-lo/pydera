@@ -1,6 +1,9 @@
 import os
 
 import pytest
+import tempfile
+
+from zipfile import ZipFile
 
 from getgar.utils import unzip
 from getgar.utils import make_path
@@ -12,8 +15,8 @@ TEST_DATA_PATH = 'getgar/tests/data/'
 
 TESTCASES = {
     'unzip': [
-        {'args': (f'{TEST_DATA_PATH}2020q2_rr1.zip', 'sub.tsv')},
-        {'args': (f'{TEST_DATA_PATH}2020q2_rr1.zip', ['tag.tsv', 'sub.tsv'])}],
+        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip', 'sub.tsv')},
+        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip', ['tag.tsv', 'sub.tsv'])}],
     'make_path': [
         {'args': False},
         {'args': str(TEST_DATA_PATH)}
@@ -55,7 +58,8 @@ def test_make_path(make_path_params, tmp_data_directory):
     test_path = make_path_params
 
     if not(test_path):
-        path = tmp_data_directory
+        tmpdir = tempfile.gettempdir()
+        path = f'{tmpdir}/getgar/tests/'
         result = make_path(path)
     else:
         path = test_path

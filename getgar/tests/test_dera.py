@@ -8,46 +8,46 @@ from getgar.dera import DERA
 TEST_DATA_PATH = 'getgar/tests/data/'
 
 TESTCASES = {
-    'DERA_to_dataframe': [{'args': None}],
-    'MutualFund_get': [{'args': None}],
-    'MutualFund_get_error': [{'args': None}],
+    'dera_init': [
+        {'args': ('09/30/2018', '06/19/2019'),
+         'expected': ('30-09-2018', '19-06-2019')},
+        {'args': ('2018-09-30', '2019-06-19'),
+         'expected': ('30-09-2018', '19-06-2019')}
+    ]
 }
 
-### FIXUTRES
+### FIXTURES
 
-@pytest.fixture(scope='session', params=TESTCASES['DERA_to_dataframe'])
-def DERA_to_dataframe_params(request):
+@pytest.fixture(scope='session')
+def testdera():
+    """Returns MutualFunds instance with start_date = "01-05-2019"
+    and end_date = "01-12-2019"
+    """
+    class TestDERA(DERA):
+        def get(self, path: str) -> None:
+            pass
+    return TestDERA
+
+
+@pytest.fixture(scope='session', params=TESTCASES['dera_init'])
+def dera_init_params(request):
     args = request.param['args']
-    return args
+    expected = request.param['expected']
+    return args, expected
 
 
-@pytest.fixture(scope='session', params=TESTCASES['MutualFund_get'])
-def MutualFund_get_params(request):
-    args = request.param['args']
-    return args
-
-
-@pytest.fixture(scope='session', params=TESTCASES['MutualFund_get_error'])
-def MutualFund_get_error_params(request):
-    args = request.param['args']
-    return args
+@pytest.fixture(scope='session')
+def mutualfunds():
+    """Returns MutualFunds instance with start_date = "01-05-2019"
+    and end_date = "01-12-2019"
+    """
+    return MutualFunds(start_date="01-05-2019", end_date="01-12-2019")
 
 
 ### UNIT TESTS
 
-def test_DERA_to_dataframe(DERA_to_dataframe_params):
-    """
-    """
-    pass
-
-
-def test_MutualFund_get(MutualFund_get_params):
-    """ 
-    """
-    pass
-
-
-def test_MutualFund_get_error(MutualFund_get_error_params):
-    """
-    """
-    pass
+def test_dera_init(dera_init_params, testdera):
+    instance = testdera(*dera_init_params[0])
+    result = (instance.start_date, instance.end_date)
+    expected = dera_init_params[1]
+    assert result == expected
