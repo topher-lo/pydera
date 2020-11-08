@@ -65,7 +65,7 @@ class Reports(ABC):
     
     def __init__(self,
                  start_date: str,
-                 end_date: Union[None, str] = None,
+                 end_date: Union[None, str]=None,
                  *args, **kwargs
     ) -> None:
         """Inits Reports abstract base class.
@@ -132,11 +132,33 @@ class Reports(ABC):
 
 
     def display_tags(self, 
-                     custom=False, 
-                     dtype=False,
-                     detailed=False,
-                     numerical=2
+                     custom: bool=False, 
+                     dtype: bool=False,
+                     detailed: bool=False,
+                     numerical: int=2
     ) -> str:
+    """Returns tags stored in self.TAG as a string
+    in a human readable format. 
+
+    Args:
+        custom (bool):
+            Optional; 
+    
+        dtype (bool):
+            Optional; 
+
+        detailed (bool):
+            Optional; 
+
+        numerical (int):
+            Optional; 
+
+    Returns:
+        Tag names and descriptions as a multi-line string.
+
+    Raise:
+        ValueError (No TAG table found) if self.TAG is empty.
+    """
         tags = self.TAG
         if not(tags):
             raise ValueError(

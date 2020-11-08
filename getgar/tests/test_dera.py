@@ -21,7 +21,18 @@ TESTCASES = {
     ],
     'reports_tag_setter': [
         {'args': f'{TEST_DATA_PATH}/mutual_fund'}
-    ]
+    ],
+    'reports_display_tags_err': None,
+    'reports_display_tags': [
+        [],
+        {'kwargs': {'custom':True}},
+        {'kwargs': {'dtype':True}},
+        {'kwargs': {'detailed':True}},
+        {'kwargs': {'detailed':True}},
+        {'kwargs': {'numerical':0}},
+        {'kwargs': {'detailed':True}},
+
+    ],
 }
 
 ### FIXTURES
@@ -89,18 +100,24 @@ def mutualfunds():
 
 ### UNIT TESTS
 
-def test_reports_init(reports_init_params, get_testreports_cls):
+def test_reports_init(reports_init_params, 
+                      get_testreports_cls):
     instance = get_testreports_cls(*reports_init_params[0])
     result = (instance.start_date, instance.end_date)
     expected = reports_init_params[1]
     assert result == expected
 
 
-def test_reports_tag_setter(reports_tag_setter_params, get_testreports):
+def test_reports_tag_setter(reports_tag_setter_params, 
+                            get_testreports):
     instance = get_testreports
     instance.TAG = reports_tag_setter_params[0]
     result = instance.TAG
     expected = reports_tag_setter_params[1]
-    print(result)
-    print(expected)
     assert_frame_equal(result, expected)
+
+
+def test_reports_display_tags_err(get_testreports):
+    instance = get_testreports
+    with pytest.raises(Exception) as ValueError:
+        instance.display_tags()
