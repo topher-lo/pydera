@@ -67,7 +67,9 @@ def process(dir: str,
             table: str,
             start_date: str, 
             end_date: Union[None, str]=None) -> pd.DataFrame:
-    """
+    """Processes DERA dataset zipfiles found in dir for quarters between
+    start_date and end_date.
+
     Args: 
         dir: str
             Path to directory containg DERA datasets as zipfiles.
