@@ -6,15 +6,16 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from getgar.utils import unzip
-from getgar.dera import zip_to_tags
+from getgar.dera import process
 
 ### TESTCASES
 
 TEST_DATA_PATH = 'getgar/tests/data'
 
 TESTCASES = {
-    'zip_to_tags': [
+    'process': [
         {'args': (f'{TEST_DATA_PATH}/mutual_fund',
+                  'tag',
                   '01-05-2019',
                   '15-12-2019')}
     ],
@@ -26,18 +27,17 @@ TESTCASES = {
     #     {'kwargs': {'detailed':True}},
     #     {'kwargs': {'numerical':0}},
     #     {'kwargs': {'detailed':True}},
-
     # ],
 }
 
 ### FIXTURES
 
+@pytest.fixture(scope='function', params=TESTCASES['process'])
+def process_params(request, tmp_data_directory):
 
-@pytest.fixture(scope='function', params=TESTCASES['zip_to_tags'])
-def zip_to_tags_params(request, tmp_data_directory):
     args = request.param['args']
 
-    tmpdir = tmp_data_directory + '/reports'
+    tmpdir = tmp_data_directory + '/process'
 
     unzip(f'{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip', 'tag.tsv', tmpdir)
     os.rename(f'{tmpdir}/tag.tsv', f'{tmpdir}/2019q2.tsv') 
@@ -60,7 +60,7 @@ def zip_to_tags_params(request, tmp_data_directory):
 
 ### UNIT TESTS
 
-def test_zip_to_tags(zip_to_tags_params):
-    result = zip_to_tags(*zip_to_tags_params[0])
-    expected = zip_to_tags_params[1]
+def test_process(process_params):
+    result = process(*process_params[0])
+    expected = process_params[1]
     assert_frame_equal(result, expected)

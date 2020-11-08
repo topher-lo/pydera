@@ -3,8 +3,13 @@ The `dera` module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.
 
 Supported datasets from DERA include: 
-    - Mutual Fund Prospectus Risk / Return Summary
-    - Financial Statements
+    - Mutual Fund Prospectus Risk and Return Summary
+    - Financial Statements and Notes
+
+Note: 
+Each dataset from DERA is a zipfile that contains multiple files in 
+a tabular format (e.g. tab-separated values file). 
+Each file represents a different data table.
 
 You can find DERA datasets at https://www.sec.gov/dera/data
 """
@@ -26,24 +31,57 @@ from typing import List
 from getgar.utils import unzip
 
 
-def zip_to_tags(dir: str,
-                start_date: str, 
-                end_date: Union[None, str]=None,
 
-) -> pd.DataFrame:
+def _process_tags(tmpdir: str) -> pd.DataFrame:
     """SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-    between start_date and end_date.
+    found in tmpdir.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
 
     References:
     https://www.sec.gov/info/edgar/edgartaxonomies.shtml
+    """
 
+    # UNION all TAG tables on columns
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    tables = [pd.read_csv(t, sep='\t')
+                .set_index(['tag', 'version']) for t in table_paths]
+    data = pd.concat(tables, axis=0)
+    data = data[~data.index.duplicated(keep='first')]
+
+    # Sort TAG tables rows by tag index
+    data = data.sort_index()
+
+    return data
+
+
+def _process_subs(tmpdir: str) -> pd.DataFrame:
+    """SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
+    found in tmpdir.
+    """
+    pass
+
+
+def process(dir: str,
+            table: str,
+            start_date: str, 
+            end_date: Union[None, str]=None) -> pd.DataFrame:
+    """
     Args: 
         dir: str
             Path to directory containg DERA datasets as zipfiles.
-    
+
+        table: str
+            Tables in datasets to process.
+            Supported tables (and corresponding datasets) include:
+            - 'tag': tag.tsv files found in 1) Mutual Fund Prospectus 
+                     Risk and Return Summary; and 2) Financial Statements 
+                     and Notes.
+            - 'sub': sub.tsv files found in 1) Mutual Fund Prospectus 
+                     Risk and Return Summary; and 2) Financial Statements 
+                     and Notes.
+
         start_date: str
             Fetch all datasets after start_date
             (includes start_date's quarter even if start_date is after the
@@ -61,6 +99,7 @@ def zip_to_tags(dir: str,
             Date must be written in some ordered DateTime string format 
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
     """
+
     # Convert datetime string to %d-%m-$Y format
     start_date = dateutil.parser\
                          .parse(start_date)\
@@ -79,85 +118,78 @@ def zip_to_tags(dir: str,
                     .to_period('Q')\
                     .strftime('%Yq%q')\
                     .to_list()
+
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
-        # Unzip TAG tables into tmp dir
+        # Unzip tables into tmp dir
         for f in os.listdir(dir):
             path = os.path.join(dir, f)
             if any(q in path for q in date_range):
-                unzip(f'{path}', 'tag.tsv', tmpdir)
+                unzip(f'{path}', f'{table}.tsv', tmpdir)
                 dataset_name = f.split('.')[0]
-                os.rename(f'{tmpdir}/tag.tsv', 
-                            f'{tmpdir}/{dataset_name}_tag.tsv')
+                os.rename(f'{tmpdir}/{table}.tsv', 
+                            f'{tmpdir}/{dataset_name}_{table}.tsv')
         
-        # UNION all TAG tables on columns
-        table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-        tables = [pd.read_csv(t, sep='\t')
-                    .set_index(['tag', 'version']) for t in table_paths]
-        data = pd.concat(tables, axis=0)
-        data = data[~data.index.duplicated(keep='first')]
-
-        # Sort TAG tables rows by tag index
-        data = data.sort_index()
+        # Process specified table
+        if table == 'tag':
+            data = _process_tags(tmpdir)
+        
+        elif table == 'sub':
+            data = _process_subs(tmpdir)
 
     return data
+        
 
+# def display_tags(data: pd.DataFrame, 
+#                  custom: bool=False, 
+#                  dtype: bool=False,
+#                  detailed: bool=False,
+#                  numerical: int=2
+# ) -> str:
+#     """Returns tags stored in self.TAG as a string
+#     in a human readable format. 
 
-def display_tags(data: pd.DataFrame, 
-                 custom: bool=False, 
-                 dtype: bool=False,
-                 detailed: bool=False,
-                 numerical: int=2
-) -> str:
-    """Returns tags stored in self.TAG as a string
-    in a human readable format. 
+#     Args:
+#         dataframe(pd.DataFrame):
 
-    Args:
-        dataframe(pd.DataFrame):
+#         custom (bool):
+#             Optional; 
 
+#         dtype (bool):
+#             Optional; 
 
-        custom (bool):
-            Optional; 
+#         detailed (bool):
+#             Optional; 
 
-        dtype (bool):
-            Optional; 
+#         numerical (int):
+#             Optional; 
 
-        detailed (bool):
-            Optional; 
+#     Returns:
+#         Tag names and descriptions as a multi-line string.
 
-        numerical (int):
-            Optional; 
+#     Raise:
+#         ValueError (No TAG table found) if self.TAG is empty.
+#     """
 
-    Returns:
-        Tag names and descriptions as a multi-line string.
+#     tags = data
+#     if custom:
+#         tags = tags[tags['custom'] == 1]
+#     else:
+#         tags = tags[tags['custom'] == 0]
 
-    Raise:
-        ValueError (No TAG table found) if self.TAG is empty.
-    """
-    tags = data
-    if custom:
-        tags = tags[tags['custom'] == 1]
-    else:
-        tags = tags[tags['custom'] == 0]
-    full_desc = ''
-    for i in range(len(tags)):
-        entry = tags.iloc[i]
-        attr = (entry['tag'], entry['version'], entry['tlabel'])
-        tag_desc = f'\nTag: {attr[0]} \
-                        \nVersion: {attr[1]} \
-                        \nLabel: {attr[2]}'
-        if dtype:
-            attr = entry['datatype']
-            tag_desc = tag_desc + f'\nDatatype: {attr}'
-        if detailed:
-            attr = entry['doc']
-            tag_desc = tag_desc + f'\nDefinition: {attr}'
-        full_desc = full_desc + tag_desc
-    return full_desc
+#     full_desc = ''
+#     for i in range(len(tags)):
+#         entry = tags.iloc[i]
+#         attr = (entry['tag'], entry['version'], entry['tlabel'])
+#         tag_desc = f'\nTag: {attr[0]} \
+#                      \nVersion: {attr[1]} \
+#                      \nLabel: {attr[2]}'
+#         if dtype:
+#             attr = entry['datatype']
+#             tag_desc = tag_desc + f'\nDatatype: {attr}'
+#         if detailed:
+#             attr = entry['doc']
+#             tag_desc = tag_desc + f'\nDefinition: {attr}'
+#         full_desc = full_desc + tag_desc
 
-    
-def zip_to_subs(self, dir: str) -> pd.DataFrame:
-    """SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-    between start_date and end_date.
-    """
-    pass
+#     return full_desc
