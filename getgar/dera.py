@@ -1,13 +1,15 @@
 """
-The `dera` module contains the DERA abstract base class.
-DERA's concrete implementations are associated with different 
+The `dera` module contains the `Reports` abstract base class.
+`Reports`'s concrete implementations are associated certain types of 
 structured datasets produced by the SEC's Divison of Economic 
-and Risk Analysis. Each concrete class contains methods
-to download and process its associated dataset scope.
-DERA datasets are released on a quarterly basis.
+and Risk Analysis. In particular, `Reports` is associated
+with datasets derived from report-like SEC submissions. 
+Each concrete class contains methods to download and process its 
+associated dataset scope.
 
-Supported scopes include: 
+Supported scopes for the Reports class include: 
     - Mutual Fund Prospectus Risk / Return Summary
+    - Financial Statements
 
 You can find DERA datasets at https://www.sec.gov/dera/data
 """
@@ -32,9 +34,10 @@ from getgar.utils import unzip
 
 ### ABSTRACT BASE CLASS
 
-class DERA(ABC):
+class Reports(ABC):
     """Abstract base class containing methods to 
-    download and extract DERA datasets.
+    download and extract DERA datasets associated
+    with report-like SEC submissions.
     
     Attributes:
         start_date: str
@@ -65,7 +68,7 @@ class DERA(ABC):
                  end_date: Union[None, str] = None,
                  *args, **kwargs
     ) -> None:
-        """Inits DERA abstract base class.
+        """Inits Reports abstract base class.
         Dates stored as %d-%m-%Y time format strings.
         """
         self.start_date = dateutil.parser\
@@ -78,17 +81,18 @@ class DERA(ABC):
                                .parse(end_date)\
                                .strftime('%d-%m-%Y')
         self.end_date = end_date
-        self.TAG = None
-        self.SUB = None
 
     @property
     def TAG(self):
-        return self._TAGS
+        return self._TAG
     
     @TAG.setter
-    def TAG(self, path: str) -> None:
-        """SQL JOINS all TAG tables in dataset zipfiles
+    def TAG(self, dir: str) -> None:
+        """SQL UNIONS all TAG tables in dataset zipfiles
         between start_date and end_date.
+
+        Sets frequency table of tags in LABEL tables in 
+        dataset zipfiles between start_date and end_date.
 
         The TAG (Tags) table contains all standard taxonomy tags
         (as of the date) and custom tags.
@@ -97,13 +101,34 @@ class DERA(ABC):
         https://www.sec.gov/info/edgar/edgartaxonomies.shtml
         """
         # Get list of quarters between start_date and end_date
-        date_range = pd.date_range(self.start_date, 
-                                   self.end_date, 
-                                   freq='Q')\
-                                   .to_period('Q')\
-                                   .strftime('%Yq%q')\
-                                   .to_list()
-        tags = []
+        start_end_dates = pd.to_datetime([self.start_date, self.end_date])
+        date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq='Q')\
+                       .to_period('Q')\
+                       .strftime('%Yq%q')\
+                       .to_list()
+        # Create tmp dir
+        with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
+            # Unzip TAG tables into tmp dir
+            for f in os.listdir(dir):
+                path = os.path.join(dir, f)
+                if any(q in path for q in date_range):
+                    unzip(f'{path}', 'tag.tsv', tmpdir)
+                    dataset_name = f.split('.')[0]
+                    os.rename(f'{tmpdir}/tag.tsv', 
+                              f'{tmpdir}/{dataset_name}_tag.tsv')
+            
+            # UNION all TAG tables on columns
+            table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+            tables = [pd.read_csv(t, sep='\t')
+                        .set_index(['tag', 'version']) for t in table_paths]
+            data = pd.concat(tables, axis=0)
+            data = data[~data.index.duplicated(keep='first')]
+
+            # Sort TAG tables rows by tag index
+            data = data.sort_index()
+
+        # Set UNIONED TAG tables
+        self._TAG = data
 
 
     def display_tags(self, 
@@ -143,24 +168,39 @@ class DERA(ABC):
         return self._sub
     
     @SUB.setter
-    def SUB(self, path: str) -> None:
-        """SQL JOINS all SUB tables in dataset zipfiles
+    def SUB(self, dir: str) -> None:
+        """SQL UNIONS all SUB tables in dataset zipfiles
         between start_date and end_date.
         """
 
     @abstractmethod
-    def get(self, path: str, *args, **kwargs) -> None:
+    def get(self, dir: str, *args, **kwargs) -> None:
         """Retrieves all dataset zipfiles between start_date 
-        and end_date. Saves zipfiles in path.
+        and end_date. Saves zipfiles in dir.
         """
 
 
 ### CONCRETE CLASSES
 
-class MutualFunds(DERA):
-    """Concrete implementation of DERA.
-    Download and process DERA's "Mutual Fund Prospectus Risk / Return 
+class MutualFunds(Reports):
+    """Concrete implementation of Reports.
+    Download and process Reports's "Mutual Fund Prospectus Risk / Return 
     Summary" Datasets.
+    
+    Datasets are found at:
+    https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
+    """
+
+    def get(self, dir: str) -> None:
+        """Retrieves all dataset zipfiles between start_date 
+        and end_date. Saves zipfiles in dir.
+        """
+        pass
+
+
+class FinancialStatements(Reports):
+    """Concrete implementation of Reports.
+    Download and process Reports's "Financial Statement and Notes" Datasets.
     
     Datasets are found at:
     https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets

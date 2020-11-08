@@ -26,13 +26,14 @@ TESTCASES = {
 
 ### FIXTURES
 
-@pytest.fixture(scope='session', params=TESTCASES['unzip'])
+@pytest.fixture(scope='function', params=TESTCASES['unzip'])
 def unzip_params(request):
     args = request.param['args']
-    return args
+    expected = sorted(''.join(request.param['args'][1]))
+    return args, expected
 
 
-@pytest.fixture(scope='session', params=TESTCASES['make_path'])
+@pytest.fixture(scope='function', params=TESTCASES['make_path'])
 def make_path_params(request):
     args = request.param['args']
     return args
@@ -44,13 +45,14 @@ def test_unzip(unzip_params, tmp_data_directory):
     """Unzips zip file and saves content (specified by filename) 
     inside tmp directory.
     """
-    unzip(*unzip_params, tmp_data_directory)
-    result = sorted(''.join([str(f) for f in os.listdir(tmp_data_directory)]))
-    expected = sorted(''.join(unzip_params[1]))
+    tmpdir = tmp_data_directory + '/unzip'
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
     assert result == expected
 
 
-def test_make_path(make_path_params, tmp_data_directory):
+def test_make_path(make_path_params):
     """If directory path exists, returns path.
     Else creates directory and returns path.
     """
