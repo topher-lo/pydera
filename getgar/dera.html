@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
 <title>getgar.dera API documentation</title>
-<meta name="description" content="The `dera` module contains the DERA abstract base class.
-DERA&#39;s concrete implementations are associated with different
-structured datasets produced …" />
+<meta name="description" content="The `dera` module contains functions to process structured datasets
+produced by the SEC&#39;s Divison of Economic and Risk Analysis …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -24,432 +23,396 @@ structured datasets produced …" />
 <h1 class="title">Module <code>getgar.dera</code></h1>
 </header>
 <section id="section-intro">
-<p>The <code>dera</code> module contains the DERA abstract base class.
-DERA's concrete implementations are associated with different
-structured datasets produced by the SEC's Divison of Economic
-and Risk Analysis. Each concrete class contains methods
-to download and process its associated dataset scope.
-DERA datasets are released on a quarterly basis.</p>
-<p>Supported scopes include:
-- Mutual Fund Prospectus Risk / Return Summary</p>
+<p>The <code>dera</code> module contains functions to process structured datasets
+produced by the SEC's Divison of Economic and Risk Analysis.</p>
+<p>Supported datasets from DERA include:
+- Mutual Fund Prospectus Risk / Return Summary
+- Financial Statements</p>
 <p>You can find DERA datasets at <a href="https://www.sec.gov/dera/data">https://www.sec.gov/dera/data</a></p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-The `dera` module contains the DERA abstract base class.
-DERA&#39;s concrete implementations are associated with different 
-structured datasets produced by the SEC&#39;s Divison of Economic 
-and Risk Analysis. Each concrete class contains methods
-to download and process its associated dataset scope.
-DERA datasets are released on a quarterly basis.
+The `dera` module contains functions to process structured datasets
+produced by the SEC&#39;s Divison of Economic and Risk Analysis.
 
-Supported scopes include: 
+Supported datasets from DERA include: 
     - Mutual Fund Prospectus Risk / Return Summary
+    - Financial Statements
 
 You can find DERA datasets at https://www.sec.gov/dera/data
 &#34;&#34;&#34;
 
 import sys
 import os
-
-from abc import ABC
-from abc import abstractmethod
-
 import numpy as np
 import pandas as pd 
-
+import urllib.error as urlerr
 import tempfile
 
-from urllib import request
-import urllib.error as urlerr
+import dateutil.parser
 
+from datetime import date
+from urllib import request
 from typing import Union
 from typing import List
 
-### ABSTRACT BASE CLASS
+from getgar.utils import unzip
 
-class DERA(ABC):
-    &#34;&#34;&#34;Abstract base class containing methods to 
-    download and extract DERA datasets.
+
+def zip_to_tags(dir: str,
+                start_date: str, 
+                end_date: Union[None, str]=None,
+
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
+    between start_date and end_date.
+
+    The TAG (Tags) table contains all standard taxonomy tags
+    (as of the date) and custom tags.
+
+    References:
+    https://www.sec.gov/info/edgar/edgartaxonomies.shtml
+
+    Args: 
+        dir: str
+            Path to directory containg DERA datasets as zipfiles.
     
-    Attributes:
-        start_date: Union[None, str]
-            Optional; if start_year = None, fetches all datasets before end_date.
-            Date before which not to fetch reports.
+        start_date: str
+            Fetch all datasets after start_date
+            (includes start_date&#39;s quarter even if start_date is after the
+            start of the quarter).
 
-            Date must be written in the format year-quarter, 
-            where quarter is one of the following four options:
-            &#39;q1&#39;, &#39;q2&#39;, &#39;q3&#39;, &#39;q4&#39;.
-                e.g. start_date = &#39;2019-q4&#39;
+            Date must be written in some ordered DateTime string format 
+            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
 
         end_date: Union[None, str]
             Optional; if end_date = None, feteches all datasets 
             before today (UTC) and after start_end.
-            Date after which not to fetch reports.
+            (includes end_date&#39;s quarter even if end_date is before the
+            end of the quarter).
 
-            Date must be written in the format year-quarter, 
-            where quarter is one of the following four options:
-            &#39;q1&#39;, &#39;q2&#39;, &#39;q3&#39;, &#39;q4&#39;.
-                e.g. start_date = &#39;2019-q4&#39;
-
-        table: str
-            Each DERA dataset scope has different tables.
-            The DERA class only extracts one type of table 
-            from each quarter&#39;s datasets.
-
-        path: str
-            Path to store raw, i.e. directly downloaded from 
-            SEC website, datasets in.
-
-        _paths: Union[None, List[str]]
-            Paths to raw, i.e. directly downloaded from 
-            SEC website, datasets.
-
-        _datasets: Union[None, List[pd.DataFrame]]
-            DERA datasets downloaded and stored in memory as
-            a list of pandas DataFrames.
+            Date must be written in some ordered DateTime string format 
+            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
     &#34;&#34;&#34;
-    
-    def __init__(self,
-                 start_date: Union[None, str],
-                 end_date: Union[None, str],
-                 table: str,
-                 *args, **kwargs
-    ) -&gt; None:
-        &#34;&#34;&#34;Inits DERA abstract base class&#34;&#34;&#34;
-        self.start_date = start_date
-        self.end_date = end_date
-        self.table = table
-        self._paths = None
-        self._datasets = None
+    # Convert datetime string to %d-%m-$Y format
+    start_date = dateutil.parser\
+                         .parse(start_date)\
+                         .strftime(&#39;%d-%m-%Y&#39;)
+    if not(end_date):
+        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
+    else:
+        end_date = dateutil.parser\
+                           .parse(end_date)\
+                           .strftime(&#39;%d-%m-%Y&#39;)
+    end_date = end_date
 
-    @classmethod
-    def to_dataframe(cls, path: str, sep=&#39;\t&#39;, table=&#39;sub&#39;, *args, **kwargs):
-        &#34;&#34;&#34;Converts and concantenates (along index) all datasets with the same
-        fields (i.e. tables of the same type e.g. sub.tsv)
-        into a single Pandas DataFrame. Returns DataFrame.
+    # Get list of quarters between start_date and end_date
+    start_end_dates = pd.to_datetime([start_date, end_date])
+    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq=&#39;Q&#39;)\
+                    .to_period(&#39;Q&#39;)\
+                    .strftime(&#39;%Yq%q&#39;)\
+                    .to_list()
+    # Create tmp dir
+    with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
+        # Unzip TAG tables into tmp dir
+        for f in os.listdir(dir):
+            path = os.path.join(dir, f)
+            if any(q in path for q in date_range):
+                unzip(f&#39;{path}&#39;, &#39;tag.tsv&#39;, tmpdir)
+                dataset_name = f.split(&#39;.&#39;)[0]
+                os.rename(f&#39;{tmpdir}/tag.tsv&#39;, 
+                            f&#39;{tmpdir}/{dataset_name}_tag.tsv&#39;)
+        
+        # UNION all TAG tables on columns
+        table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+        tables = [pd.read_csv(t, sep=&#39;\t&#39;)
+                    .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
+        data = pd.concat(tables, axis=0)
+        data = data[~data.index.duplicated(keep=&#39;first&#39;)]
 
-        Args:
-            path: str
-                Path to datasets.
+        # Sort TAG tables rows by tag index
+        data = data.sort_index()
 
-            sep: 
-                Defaults to tab regex deliminator &#39;\t&#39;. 
-                Delimiter to use to read datasets. 
-                See pandas.read_csv() documentation.
-
-            table:
-                DERA table type to convert to DataFrame.
-                See corresponding docstring in concrete 
-                classes for link to documentation
-                of the associated DERA dataset.
-
-        Returns:
-            DataFrame of concatenated datasets.
-        &#34;&#34;&#34;
-        datasets = [pd.read_csv(f&#39;{path}/{f}&#39;, sep) for f in os.listdir(path)]
-        return pd.concat(datasets)
-
-    @abstractmethod
-    def get(self, path: str, *args, **kwargs):
-        &#34;&#34;&#34;Retrieves all dataset zipfiles between start_date 
-        and end_date. Saves zipfiles in path.
-        &#34;&#34;&#34;
+    return data
 
 
-### CONCRETE CLASSES
-
-class MutualFunds(DERA):
-    &#34;&#34;&#34;Concrete implementation of DERA.
-    Download and process DERA&#39;s &#34;Mutual Fund Prospectus Risk / Return 
-    Summary&#34; Datasets.
-    
-    Datasets are found at:
-    https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
-    &#34;&#34;&#34;</code></pre>
-</details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="getgar.dera.DERA"><code class="flex name class">
-<span>class <span class="ident">DERA</span></span>
-<span>(</span><span>start_date: Union[NoneType, str], end_date: Union[NoneType, str], table: str, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Abstract base class containing methods to
-download and extract DERA datasets.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>start_date</code></strong></dt>
-<dd>
-<p>Union[None, str]
-Optional; if start_year = None, fetches all datasets before end_date.
-Date before which not to fetch reports.</p>
-<p>Date must be written in the format year-quarter,
-where quarter is one of the following four options:
-'q1', 'q2', 'q3', 'q4'.
-e.g. start_date = '2019-q4'</p>
-</dd>
-<dt><strong><code>end_date</code></strong></dt>
-<dd>
-<p>Union[None, str]
-Optional; if end_date = None, feteches all datasets
-before today (UTC) and after start_end.
-Date after which not to fetch reports.</p>
-<p>Date must be written in the format year-quarter,
-where quarter is one of the following four options:
-'q1', 'q2', 'q3', 'q4'.
-e.g. start_date = '2019-q4'</p>
-</dd>
-<dt><strong><code>table</code></strong></dt>
-<dd>str
-Each DERA dataset scope has different tables.
-The DERA class only extracts one type of table
-from each quarter's datasets.</dd>
-<dt><strong><code>path</code></strong></dt>
-<dd>str
-Path to store raw, i.e. directly downloaded from
-SEC website, datasets in.</dd>
-<dt><strong><code>_paths</code></strong></dt>
-<dd>Union[None, List[str]]
-Paths to raw, i.e. directly downloaded from
-SEC website, datasets.</dd>
-<dt><strong><code>_datasets</code></strong></dt>
-<dd>Union[None, List[pd.DataFrame]]
-DERA datasets downloaded and stored in memory as
-a list of pandas DataFrames.</dd>
-</dl>
-<p>Inits DERA abstract base class</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DERA(ABC):
-    &#34;&#34;&#34;Abstract base class containing methods to 
-    download and extract DERA datasets.
-    
-    Attributes:
-        start_date: Union[None, str]
-            Optional; if start_year = None, fetches all datasets before end_date.
-            Date before which not to fetch reports.
-
-            Date must be written in the format year-quarter, 
-            where quarter is one of the following four options:
-            &#39;q1&#39;, &#39;q2&#39;, &#39;q3&#39;, &#39;q4&#39;.
-                e.g. start_date = &#39;2019-q4&#39;
-
-        end_date: Union[None, str]
-            Optional; if end_date = None, feteches all datasets 
-            before today (UTC) and after start_end.
-            Date after which not to fetch reports.
-
-            Date must be written in the format year-quarter, 
-            where quarter is one of the following four options:
-            &#39;q1&#39;, &#39;q2&#39;, &#39;q3&#39;, &#39;q4&#39;.
-                e.g. start_date = &#39;2019-q4&#39;
-
-        table: str
-            Each DERA dataset scope has different tables.
-            The DERA class only extracts one type of table 
-            from each quarter&#39;s datasets.
-
-        path: str
-            Path to store raw, i.e. directly downloaded from 
-            SEC website, datasets in.
-
-        _paths: Union[None, List[str]]
-            Paths to raw, i.e. directly downloaded from 
-            SEC website, datasets.
-
-        _datasets: Union[None, List[pd.DataFrame]]
-            DERA datasets downloaded and stored in memory as
-            a list of pandas DataFrames.
-    &#34;&#34;&#34;
-    
-    def __init__(self,
-                 start_date: Union[None, str],
-                 end_date: Union[None, str],
-                 table: str,
-                 *args, **kwargs
-    ) -&gt; None:
-        &#34;&#34;&#34;Inits DERA abstract base class&#34;&#34;&#34;
-        self.start_date = start_date
-        self.end_date = end_date
-        self.table = table
-        self._paths = None
-        self._datasets = None
-
-    @classmethod
-    def to_dataframe(cls, path: str, sep=&#39;\t&#39;, table=&#39;sub&#39;, *args, **kwargs):
-        &#34;&#34;&#34;Converts and concantenates (along index) all datasets with the same
-        fields (i.e. tables of the same type e.g. sub.tsv)
-        into a single Pandas DataFrame. Returns DataFrame.
-
-        Args:
-            path: str
-                Path to datasets.
-
-            sep: 
-                Defaults to tab regex deliminator &#39;\t&#39;. 
-                Delimiter to use to read datasets. 
-                See pandas.read_csv() documentation.
-
-            table:
-                DERA table type to convert to DataFrame.
-                See corresponding docstring in concrete 
-                classes for link to documentation
-                of the associated DERA dataset.
-
-        Returns:
-            DataFrame of concatenated datasets.
-        &#34;&#34;&#34;
-        datasets = [pd.read_csv(f&#39;{path}/{f}&#39;, sep) for f in os.listdir(path)]
-        return pd.concat(datasets)
-
-    @abstractmethod
-    def get(self, path: str, *args, **kwargs):
-        &#34;&#34;&#34;Retrieves all dataset zipfiles between start_date 
-        and end_date. Saves zipfiles in path.
-        &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>abc.ABC</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="getgar.dera.MutualFunds" href="#getgar.dera.MutualFunds">MutualFunds</a></li>
-</ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="getgar.dera.DERA.to_dataframe"><code class="name flex">
-<span>def <span class="ident">to_dataframe</span></span>(<span>path: str, sep='\t', table='sub', *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Converts and concantenates (along index) all datasets with the same
-fields (i.e. tables of the same type e.g. sub.tsv)
-into a single Pandas DataFrame. Returns DataFrame.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>path</code></strong></dt>
-<dd>str
-Path to datasets.</dd>
-<dt><strong><code>sep</code></strong></dt>
-<dd>Defaults to tab regex deliminator '
-'.
-Delimiter to use to read datasets.
-See pandas.read_csv() documentation.</dd>
-</dl>
-<p>table:
-DERA table type to convert to DataFrame.
-See corresponding docstring in concrete
-classes for link to documentation
-of the associated DERA dataset.</p>
-<h2 id="returns">Returns</h2>
-<p>DataFrame of concatenated datasets.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def to_dataframe(cls, path: str, sep=&#39;\t&#39;, table=&#39;sub&#39;, *args, **kwargs):
-    &#34;&#34;&#34;Converts and concantenates (along index) all datasets with the same
-    fields (i.e. tables of the same type e.g. sub.tsv)
-    into a single Pandas DataFrame. Returns DataFrame.
+def display_tags(data: pd.DataFrame, 
+                 custom: bool=False, 
+                 dtype: bool=False,
+                 detailed: bool=False,
+                 numerical: int=2
+) -&gt; str:
+    &#34;&#34;&#34;Returns tags stored in self.TAG as a string
+    in a human readable format. 
 
     Args:
-        path: str
-            Path to datasets.
+        dataframe(pd.DataFrame):
 
-        sep: 
-            Defaults to tab regex deliminator &#39;\t&#39;. 
-            Delimiter to use to read datasets. 
-            See pandas.read_csv() documentation.
 
-        table:
-            DERA table type to convert to DataFrame.
-            See corresponding docstring in concrete 
-            classes for link to documentation
-            of the associated DERA dataset.
+        custom (bool):
+            Optional; 
+
+        dtype (bool):
+            Optional; 
+
+        detailed (bool):
+            Optional; 
+
+        numerical (int):
+            Optional; 
 
     Returns:
-        DataFrame of concatenated datasets.
+        Tag names and descriptions as a multi-line string.
+
+    Raise:
+        ValueError (No TAG table found) if self.TAG is empty.
     &#34;&#34;&#34;
-    datasets = [pd.read_csv(f&#39;{path}/{f}&#39;, sep) for f in os.listdir(path)]
-    return pd.concat(datasets)</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="getgar.dera.DERA.get"><code class="name flex">
-<span>def <span class="ident">get</span></span>(<span>self, path: str, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Retrieves all dataset zipfiles between start_date
-and end_date. Saves zipfiles in path.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@abstractmethod
-def get(self, path: str, *args, **kwargs):
-    &#34;&#34;&#34;Retrieves all dataset zipfiles between start_date 
-    and end_date. Saves zipfiles in path.
-    &#34;&#34;&#34;</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="getgar.dera.MutualFunds"><code class="flex name class">
-<span>class <span class="ident">MutualFunds</span></span>
-<span>(</span><span>start_date: Union[NoneType, str], end_date: Union[NoneType, str], table: str, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Concrete implementation of DERA.
-Download and process DERA's "Mutual Fund Prospectus Risk / Return
-Summary" Datasets.</p>
-<p>Datasets are found at:
-<a href="https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets">https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets</a></p>
-<p>Inits DERA abstract base class</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MutualFunds(DERA):
-    &#34;&#34;&#34;Concrete implementation of DERA.
-    Download and process DERA&#39;s &#34;Mutual Fund Prospectus Risk / Return 
-    Summary&#34; Datasets.
+    tags = data
+    if custom:
+        tags = tags[tags[&#39;custom&#39;] == 1]
+    else:
+        tags = tags[tags[&#39;custom&#39;] == 0]
+    full_desc = &#39;&#39;
+    for i in range(len(tags)):
+        entry = tags.iloc[i]
+        attr = (entry[&#39;tag&#39;], entry[&#39;version&#39;], entry[&#39;tlabel&#39;])
+        tag_desc = f&#39;\nTag: {attr[0]} \
+                        \nVersion: {attr[1]} \
+                        \nLabel: {attr[2]}&#39;
+        if dtype:
+            attr = entry[&#39;datatype&#39;]
+            tag_desc = tag_desc + f&#39;\nDatatype: {attr}&#39;
+        if detailed:
+            attr = entry[&#39;doc&#39;]
+            tag_desc = tag_desc + f&#39;\nDefinition: {attr}&#39;
+        full_desc = full_desc + tag_desc
+    return full_desc
+
     
-    Datasets are found at:
-    https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
-    &#34;&#34;&#34;</code></pre>
+def zip_to_subs(self, dir: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
+    between start_date and end_date.
+    &#34;&#34;&#34;
+    pass</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="getgar.dera.DERA" href="#getgar.dera.DERA">DERA</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="getgar.dera.DERA" href="#getgar.dera.DERA">DERA</a></b></code>:
-<ul class="hlist">
-<li><code><a title="getgar.dera.DERA.get" href="#getgar.dera.DERA.get">get</a></code></li>
-<li><code><a title="getgar.dera.DERA.to_dataframe" href="#getgar.dera.DERA.to_dataframe">to_dataframe</a></code></li>
-</ul>
-</li>
-</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="getgar.dera.display_tags"><code class="name flex">
+<span>def <span class="ident">display_tags</span></span>(<span>data: pandas.core.frame.DataFrame, custom: bool = False, dtype: bool = False, detailed: bool = False, numerical: int = 2) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns tags stored in self.TAG as a string
+in a human readable format. </p>
+<h2 id="args">Args</h2>
+<p>dataframe(pd.DataFrame):</p>
+<p>custom (bool):
+Optional; </p>
+<p>dtype (bool):
+Optional; </p>
+<p>detailed (bool):
+Optional; </p>
+<p>numerical (int):
+Optional; </p>
+<h2 id="returns">Returns</h2>
+<p>Tag names and descriptions as a multi-line string.</p>
+<h2 id="raise">Raise</h2>
+<p>ValueError (No TAG table found) if self.TAG is empty.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def display_tags(data: pd.DataFrame, 
+                 custom: bool=False, 
+                 dtype: bool=False,
+                 detailed: bool=False,
+                 numerical: int=2
+) -&gt; str:
+    &#34;&#34;&#34;Returns tags stored in self.TAG as a string
+    in a human readable format. 
+
+    Args:
+        dataframe(pd.DataFrame):
+
+
+        custom (bool):
+            Optional; 
+
+        dtype (bool):
+            Optional; 
+
+        detailed (bool):
+            Optional; 
+
+        numerical (int):
+            Optional; 
+
+    Returns:
+        Tag names and descriptions as a multi-line string.
+
+    Raise:
+        ValueError (No TAG table found) if self.TAG is empty.
+    &#34;&#34;&#34;
+    tags = data
+    if custom:
+        tags = tags[tags[&#39;custom&#39;] == 1]
+    else:
+        tags = tags[tags[&#39;custom&#39;] == 0]
+    full_desc = &#39;&#39;
+    for i in range(len(tags)):
+        entry = tags.iloc[i]
+        attr = (entry[&#39;tag&#39;], entry[&#39;version&#39;], entry[&#39;tlabel&#39;])
+        tag_desc = f&#39;\nTag: {attr[0]} \
+                        \nVersion: {attr[1]} \
+                        \nLabel: {attr[2]}&#39;
+        if dtype:
+            attr = entry[&#39;datatype&#39;]
+            tag_desc = tag_desc + f&#39;\nDatatype: {attr}&#39;
+        if detailed:
+            attr = entry[&#39;doc&#39;]
+            tag_desc = tag_desc + f&#39;\nDefinition: {attr}&#39;
+        full_desc = full_desc + tag_desc
+    return full_desc</code></pre>
+</details>
+</dd>
+<dt id="getgar.dera.zip_to_subs"><code class="name flex">
+<span>def <span class="ident">zip_to_subs</span></span>(<span>self, dir: str) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
+between start_date and end_date.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zip_to_subs(self, dir: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
+    between start_date and end_date.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+<dt id="getgar.dera.zip_to_tags"><code class="name flex">
+<span>def <span class="ident">zip_to_tags</span></span>(<span>dir: str, start_date: str, end_date: Union[NoneType, str] = None) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
+between start_date and end_date.</p>
+<p>The TAG (Tags) table contains all standard taxonomy tags
+(as of the date) and custom tags.</p>
+<p>References:
+<a href="https://www.sec.gov/info/edgar/edgartaxonomies.shtml">https://www.sec.gov/info/edgar/edgartaxonomies.shtml</a></p>
+<p>Args:
+dir: str
+Path to directory containg DERA datasets as zipfiles.</p>
+<pre><code>start_date: str
+    Fetch all datasets after start_date
+    (includes start_date's quarter even if start_date is after the
+    start of the quarter).
+
+    Date must be written in some ordered DateTime string format 
+    e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+
+end_date: Union[None, str]
+    Optional; if end_date = None, feteches all datasets 
+    before today (UTC) and after start_end.
+    (includes end_date's quarter even if end_date is before the
+    end of the quarter).
+
+    Date must be written in some ordered DateTime string format 
+    e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zip_to_tags(dir: str,
+                start_date: str, 
+                end_date: Union[None, str]=None,
+
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
+    between start_date and end_date.
+
+    The TAG (Tags) table contains all standard taxonomy tags
+    (as of the date) and custom tags.
+
+    References:
+    https://www.sec.gov/info/edgar/edgartaxonomies.shtml
+
+    Args: 
+        dir: str
+            Path to directory containg DERA datasets as zipfiles.
+    
+        start_date: str
+            Fetch all datasets after start_date
+            (includes start_date&#39;s quarter even if start_date is after the
+            start of the quarter).
+
+            Date must be written in some ordered DateTime string format 
+            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+
+        end_date: Union[None, str]
+            Optional; if end_date = None, feteches all datasets 
+            before today (UTC) and after start_end.
+            (includes end_date&#39;s quarter even if end_date is before the
+            end of the quarter).
+
+            Date must be written in some ordered DateTime string format 
+            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+    &#34;&#34;&#34;
+    # Convert datetime string to %d-%m-$Y format
+    start_date = dateutil.parser\
+                         .parse(start_date)\
+                         .strftime(&#39;%d-%m-%Y&#39;)
+    if not(end_date):
+        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
+    else:
+        end_date = dateutil.parser\
+                           .parse(end_date)\
+                           .strftime(&#39;%d-%m-%Y&#39;)
+    end_date = end_date
+
+    # Get list of quarters between start_date and end_date
+    start_end_dates = pd.to_datetime([start_date, end_date])
+    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq=&#39;Q&#39;)\
+                    .to_period(&#39;Q&#39;)\
+                    .strftime(&#39;%Yq%q&#39;)\
+                    .to_list()
+    # Create tmp dir
+    with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
+        # Unzip TAG tables into tmp dir
+        for f in os.listdir(dir):
+            path = os.path.join(dir, f)
+            if any(q in path for q in date_range):
+                unzip(f&#39;{path}&#39;, &#39;tag.tsv&#39;, tmpdir)
+                dataset_name = f.split(&#39;.&#39;)[0]
+                os.rename(f&#39;{tmpdir}/tag.tsv&#39;, 
+                            f&#39;{tmpdir}/{dataset_name}_tag.tsv&#39;)
+        
+        # UNION all TAG tables on columns
+        table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+        tables = [pd.read_csv(t, sep=&#39;\t&#39;)
+                    .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
+        data = pd.concat(tables, axis=0)
+        data = data[~data.index.duplicated(keep=&#39;first&#39;)]
+
+        # Sort TAG tables rows by tag index
+        data = data.sort_index()
+
+    return data</code></pre>
+</details>
 </dd>
 </dl>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -463,18 +426,11 @@ Summary" Datasets.</p>
 <li><code><a title="getgar" href="index.html">getgar</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="getgar.dera.DERA" href="#getgar.dera.DERA">DERA</a></code></h4>
+<li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="getgar.dera.DERA.get" href="#getgar.dera.DERA.get">get</a></code></li>
-<li><code><a title="getgar.dera.DERA.to_dataframe" href="#getgar.dera.DERA.to_dataframe">to_dataframe</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="getgar.dera.MutualFunds" href="#getgar.dera.MutualFunds">MutualFunds</a></code></h4>
-</li>
+<li><code><a title="getgar.dera.display_tags" href="#getgar.dera.display_tags">display_tags</a></code></li>
+<li><code><a title="getgar.dera.zip_to_subs" href="#getgar.dera.zip_to_subs">zip_to_subs</a></code></li>
+<li><code><a title="getgar.dera.zip_to_tags" href="#getgar.dera.zip_to_tags">zip_to_tags</a></code></li>
 </ul>
 </li>
 </ul>

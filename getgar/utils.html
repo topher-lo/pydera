@@ -34,15 +34,15 @@ from typing import Union
 from typing import List
 
 
-def unzip(zipfile: Union[ZipFile, str], filename: Union[str, List[str]], path: str) -&gt; None:
+def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -&gt; None:
     &#34;&#34;&#34;Unzip, extract, and save content of a zip file.
 
     Args: 
-        zipfile (zip-like object or path-like object): 
+        zipfile: path-like object 
             Path to zip file to be unzipped.
-        filename (str or list): 
+        filename: str or list 
             File(s) to extract from the zip.
-        path (str):
+        path: str
             Path to save extracted files into.
     Returns: 
         None
@@ -57,20 +57,15 @@ def unzip(zipfile: Union[ZipFile, str], filename: Union[str, List[str]], path: s
 
 
 def make_path(path: str) -&gt; str:
-    &#34;&#34;&#34;Make directory based on filing info.
+    &#34;&#34;&#34;Make directory
     Args:
-        path (str): Path to be made if it doesn&#39;t exist.
-    Raises:
-        OSError: If there is a problem making the path.
+        path: str 
+            Path to be made if it doesn&#39;t exist.
     Returns:
         path (str)
     &#34;&#34;&#34;
     if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            if e.error != e.EXIST:
-                raise OSError
+        os.makedirs(path)
     return path</code></pre>
 </details>
 </section>
@@ -85,16 +80,12 @@ def make_path(path: str) -&gt; str:
 <span>def <span class="ident">make_path</span></span>(<span>path: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Make directory based on filing info.</p>
+<div class="desc"><p>Make directory</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>Path to be made if it doesn't exist.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>OSError</code></dt>
-<dd>If there is a problem making the path.</dd>
+<dt><strong><code>path</code></strong></dt>
+<dd>str
+Path to be made if it doesn't exist.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>path (str)</p></div>
@@ -103,34 +94,29 @@ def make_path(path: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def make_path(path: str) -&gt; str:
-    &#34;&#34;&#34;Make directory based on filing info.
+    &#34;&#34;&#34;Make directory
     Args:
-        path (str): Path to be made if it doesn&#39;t exist.
-    Raises:
-        OSError: If there is a problem making the path.
+        path: str 
+            Path to be made if it doesn&#39;t exist.
     Returns:
         path (str)
     &#34;&#34;&#34;
     if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            if e.error != e.EXIST:
-                raise OSError
+        os.makedirs(path)
     return path</code></pre>
 </details>
 </dd>
 <dt id="getgar.utils.unzip"><code class="name flex">
-<span>def <span class="ident">unzip</span></span>(<span>zipfile: Union[zipfile.ZipFile, str], filename: Union[str, List[str]], path: str) ‑> NoneType</span>
+<span>def <span class="ident">unzip</span></span>(<span>zipfile: str, filename: Union[str, List[str]], path: str) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Unzip, extract, and save content of a zip file.</p>
 <p>Args:
-zipfile (zip-like object or path-like object):
+zipfile: path-like object
 Path to zip file to be unzipped.
-filename (str or list):
+filename: str or list
 File(s) to extract from the zip.
-path (str):
+path: str
 Path to save extracted files into.
 Returns:
 None</p></div>
@@ -138,15 +124,15 @@ None</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def unzip(zipfile: Union[ZipFile, str], filename: Union[str, List[str]], path: str) -&gt; None:
+<pre><code class="python">def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -&gt; None:
     &#34;&#34;&#34;Unzip, extract, and save content of a zip file.
 
     Args: 
-        zipfile (zip-like object or path-like object): 
+        zipfile: path-like object 
             Path to zip file to be unzipped.
-        filename (str or list): 
+        filename: str or list 
             File(s) to extract from the zip.
-        path (str):
+        path: str
             Path to save extracted files into.
     Returns: 
         None

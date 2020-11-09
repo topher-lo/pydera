@@ -29,6 +29,9 @@
 <pre><code class="python">import os
 
 import pytest
+import tempfile
+
+from zipfile import ZipFile
 
 from getgar.utils import unzip
 from getgar.utils import make_path
@@ -40,8 +43,8 @@ TEST_DATA_PATH = &#39;getgar/tests/data/&#39;
 
 TESTCASES = {
     &#39;unzip&#39;: [
-        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}2020q2_rr1.zip&#39;, &#39;sub.tsv&#39;)},
-        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}2020q2_rr1.zip&#39;, [&#39;tag.tsv&#39;, &#39;sub.tsv&#39;])}],
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, &#39;sub.tsv&#39;)},
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, [&#39;tag.tsv&#39;, &#39;sub.tsv&#39;])}],
     &#39;make_path&#39;: [
         {&#39;args&#39;: False},
         {&#39;args&#39;: str(TEST_DATA_PATH)}
@@ -51,13 +54,14 @@ TESTCASES = {
 
 ### FIXTURES
 
-@pytest.fixture(scope=&#39;session&#39;, params=TESTCASES[&#39;unzip&#39;])
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;unzip&#39;])
 def unzip_params(request):
     args = request.param[&#39;args&#39;]
-    return args
+    expected = sorted(&#39;&#39;.join(request.param[&#39;args&#39;][1]))
+    return args, expected
 
 
-@pytest.fixture(scope=&#39;session&#39;, params=TESTCASES[&#39;make_path&#39;])
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;make_path&#39;])
 def make_path_params(request):
     args = request.param[&#39;args&#39;]
     return args
@@ -69,13 +73,14 @@ def test_unzip(unzip_params, tmp_data_directory):
     &#34;&#34;&#34;Unzips zip file and saves content (specified by filename) 
     inside tmp directory.
     &#34;&#34;&#34;
-    unzip(*unzip_params, tmp_data_directory)
-    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmp_data_directory)]))
-    expected = sorted(&#39;&#39;.join(unzip_params[1]))
+    tmpdir = tmp_data_directory + &#39;/unzip&#39;
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
     assert result == expected
 
 
-def test_make_path(make_path_params, tmp_data_directory):
+def test_make_path(make_path_params):
     &#34;&#34;&#34;If directory path exists, returns path.
     Else creates directory and returns path.
     &#34;&#34;&#34;
@@ -83,7 +88,8 @@ def test_make_path(make_path_params, tmp_data_directory):
     test_path = make_path_params
 
     if not(test_path):
-        path = tmp_data_directory
+        tmpdir = tempfile.gettempdir()
+        path = f&#39;{tmpdir}/getgar/tests/&#39;
         result = make_path(path)
     else:
         path = test_path
@@ -108,14 +114,14 @@ def test_make_path(make_path_params, tmp_data_directory):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@pytest.fixture(scope=&#39;session&#39;, params=TESTCASES[&#39;make_path&#39;])
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;make_path&#39;])
 def make_path_params(request):
     args = request.param[&#39;args&#39;]
     return args</code></pre>
 </details>
 </dd>
 <dt id="getgar.tests.test_utils.test_make_path"><code class="name flex">
-<span>def <span class="ident">test_make_path</span></span>(<span>make_path_params, tmp_data_directory)</span>
+<span>def <span class="ident">test_make_path</span></span>(<span>make_path_params)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>If directory path exists, returns path.
@@ -124,7 +130,7 @@ Else creates directory and returns path.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def test_make_path(make_path_params, tmp_data_directory):
+<pre><code class="python">def test_make_path(make_path_params):
     &#34;&#34;&#34;If directory path exists, returns path.
     Else creates directory and returns path.
     &#34;&#34;&#34;
@@ -132,7 +138,8 @@ Else creates directory and returns path.</p></div>
     test_path = make_path_params
 
     if not(test_path):
-        path = tmp_data_directory
+        tmpdir = tempfile.gettempdir()
+        path = f&#39;{tmpdir}/getgar/tests/&#39;
         result = make_path(path)
     else:
         path = test_path
@@ -155,9 +162,10 @@ inside tmp directory.</p></div>
     &#34;&#34;&#34;Unzips zip file and saves content (specified by filename) 
     inside tmp directory.
     &#34;&#34;&#34;
-    unzip(*unzip_params, tmp_data_directory)
-    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmp_data_directory)]))
-    expected = sorted(&#39;&#39;.join(unzip_params[1]))
+    tmpdir = tmp_data_directory + &#39;/unzip&#39;
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
     assert result == expected</code></pre>
 </details>
 </dd>
@@ -170,10 +178,11 @@ inside tmp directory.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@pytest.fixture(scope=&#39;session&#39;, params=TESTCASES[&#39;unzip&#39;])
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;unzip&#39;])
 def unzip_params(request):
     args = request.param[&#39;args&#39;]
-    return args</code></pre>
+    expected = sorted(&#39;&#39;.join(request.param[&#39;args&#39;][1]))
+    return args, expected</code></pre>
 </details>
 </dd>
 </dl>
