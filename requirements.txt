@@ -6,6 +6,7 @@ bleach
 certifi
 cffi
 chardet
+coverage
 cycler
 decorator
 defusedxml
@@ -56,6 +57,7 @@ Pygments
 pyparsing
 pyrsistent
 pytest
+pytest-cov
 python-dateutil
 pytz
 pyzmq
