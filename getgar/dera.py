@@ -33,8 +33,8 @@ from getgar.utils import unzip
 
 
 def _process_tags(tmpdir: str) -> pd.DataFrame:
-    """SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-    found in tmpdir.
+    """Concatenate all TAG tables in dataset zipfiles
+    found in tmpdir along index (axis=0). Removes duplicate tags.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
@@ -57,10 +57,16 @@ def _process_tags(tmpdir: str) -> pd.DataFrame:
 
 
 def _process_subs(tmpdir: str) -> pd.DataFrame:
-    """SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-    found in tmpdir.
+    """Concatenate all SUB tables in dataset zipfiles
+    found in tmpdir along index (axis=0).
+
+    Sets adsh (20 character EDGAR Accession Number) attribute as index.
     """
-    pass
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    table = [pd.read_csv(t, sep='\t') for t in table_paths]
+    data = pd.concat(tables, axis=0).set_index('adsh')
+
+    return data
 
 
 def process(dir: str,
@@ -99,6 +105,9 @@ def process(dir: str,
             Includes end_date's quarter even if end_date is before the
             end of the quarter. Date must be written in some ordered DateTime string format 
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+    Returns:
+        Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
     """
 
     # Convert datetime string to %d-%m-$Y format

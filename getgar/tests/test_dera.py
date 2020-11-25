@@ -19,15 +19,6 @@ TESTCASES = {
                   '01-05-2019',
                   '15-12-2019')}
     ],
-    # 'display_tags': [
-    #     [],
-    #     {'kwargs': {'custom':True}},
-    #     {'kwargs': {'dtype':True}},
-    #     {'kwargs': {'detailed':True}},
-    #     {'kwargs': {'detailed':True}},
-    #     {'kwargs': {'numerical':0}},
-    #     {'kwargs': {'detailed':True}},
-    # ],
 }
 
 ### FIXTURES
