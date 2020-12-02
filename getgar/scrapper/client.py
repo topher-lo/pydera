@@ -1,6 +1,6 @@
 """
-The `client` module contains functions for webscrapping the 
-SEC website and accessing EDGAR API. Designed for parallelised 
+The `client` module contains functions to webscape the 
+SEC website and access the EDGAR API. Designed for parallelised 
 webscrapping within the SEC EDGAR's Fair Access policy.
 
 References:
@@ -55,7 +55,7 @@ DERA_DATA_FILENAMES = {
 
 ### CLIENT
 
-class TimeoutHTTPAdapter(HTTPAdapter):
+class _TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, *args, **kwargs):
         if "timeout" in kwargs:
             self.timeout = kwargs["timeout"]
@@ -79,36 +79,36 @@ def _get(urls: List[str],
     """Downloads the given URLs and saves the contents to dir. 
 
     Args:
-        urls: list
+        urls (list): 
             List of URLs with files at their endpoints to download.
 
-        dir: str
+        dir (str): 
             Directory path to save downloaded files in.
 
-        session: BaseUrlSession
+        session (BaseUrlSession): 
             BaseUrlSession instance to use.
         
-        chunk_size: int
+        chunk_size (int): 
             Optional; chunk size for streaming files.
 
-        timeout: int
+        timeout (int): 
             Optional; timeout before closing connection.
 
-        retry: int
+        retry (int): 
             Optional; number of times to retry a request
             after a ConnectTimeout error.
 
-        delay: int
+        delay (int): 
             Optional; backoff factor. Determines number of seconds
             processes will sleep between failed requests.
             {delay} * (2 ** ({number of total retries} - 1))
 
-    Effects:
+    Effects: 
         Downloaded files are saved in dir. Exceptions raised by requests 
         module are logged and saved.            
 
-    Returns:
-        None.
+    Returns: 
+        None
     """
 
     def _save_content(path, r, chunk_size):
@@ -130,7 +130,7 @@ def _get(urls: List[str],
         # Only have GET requests in getgar
         method_whitelist=['GET']
     )
-    session.mount('https://', TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=timeout))
+    session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=timeout))
     for url in urls:
         try:
             r = session.get(url, stream=True)
@@ -159,24 +159,24 @@ def get_DERA(dataset: str,
     start_date and end_date.
 
     Args:
-        dataset: str
+        dataset (str): 
             DERA dataset to download.
             Supported datasets include:
                 - 'statements': Financial Statements and Notes
                 - 'risk': Mutual Fund Prospectus Risk and Return Summary
         
-        dir: str
+        dir (str): 
             Directory path to save downloaded files in.
 
-        start_date: str
-            Fetch all datasets after start_date
-            (includes start_date's quarter even if start_date is after the
-            start of the quarter).
+        start_date (str): 
+            Fetch all datasets after start_date.
+            Includes start_date's quarter even if start_date is after the
+            start of the quarter.
 
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+            Date must be written in some ordered DateTime string format
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
 
-        end_date: Union[None, str]
+        end_date (Union[None, str]): 
             Optional; if end_date = None, feteches all datasets 
             before today (UTC) and after start_end.
             (includes end_date's quarter even if end_date is before the
@@ -185,20 +185,20 @@ def get_DERA(dataset: str,
             Date must be written in some ordered DateTime string format 
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
 
-        chunk_size: int
+        chunk_size (int): 
             Optional; chunk size for streaming files.
 
-        timeout: int
+        timeout (int): 
             Optional; timeout before closing connection.
 
-        retry: int
+        retry (int): 
             Optional; number of times to retry a request
             after a ConnectTimeout error.
 
-        delay: int
+        delay (int): 
             Optional; backoff factor. Determines number of seconds
-            processes will sleep between failed requests.
-            {delay} * (2 ** ({number of total retries} - 1))
+            processes will sleep between failed requests.\n
+            sleep seconds = delay * (2 ** ({number of total retries} - 1))
     
     Effects:
         Downloaded files are saved in dir.

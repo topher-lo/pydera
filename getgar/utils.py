@@ -1,3 +1,7 @@
+"""
+The `utils` module contains the utility functions used in `getgar`.
+"""
+
 import os
 
 from zipfile import ZipFile
@@ -9,13 +13,14 @@ from typing import List
 def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -> None:
     """Unzip, extract, and save content of a zip file.
 
-    Args: 
-        zipfile: path-like object 
+    Args:
+        zipfile (str): 
             Path to zip file to be unzipped.
-        filename: str or list 
+        filename (Union[str, List[str]]): 
             File(s) to extract from the zip.
-        path: str
+        path (str): 
             Path to save extracted files into.
+
     Returns: 
         None
     """
@@ -29,10 +34,12 @@ def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -> None:
 
 
 def make_path(path: str) -> str:
-    """Make directory
+    """Make directory.
+
     Args:
-        path: str 
+        path (str): 
             Path to be made if it doesn't exist.
+
     Returns:
         path (str)
     """

@@ -67,39 +67,38 @@ def process(dir: str,
             table: str,
             start_date: str, 
             end_date: Union[None, str]=None) -> pd.DataFrame:
-    """Processes DERA dataset zipfiles found in dir for quarters between
-    start_date and end_date.
+    """Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. 
 
-    Args: 
-        dir: str
+    Args:
+        dir (str): 
             Path to directory containg DERA datasets as zipfiles.
 
-        table: str
+        table (str): 
             Tables in datasets to process.
             Supported tables (and corresponding datasets) include:
-            - 'tag': tag.tsv files found in 1) Mutual Fund Prospectus 
-                     Risk and Return Summary; and 2) Financial Statements 
-                     and Notes.
-            - 'sub': sub.tsv files found in 1) Mutual Fund Prospectus 
-                     Risk and Return Summary; and 2) Financial Statements 
-                     and Notes.
 
-        start_date: str
-            Fetch all datasets after start_date
-            (includes start_date's quarter even if start_date is after the
-            start of the quarter).
+            -  'tag' -- tag.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
 
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+            - 'sub' -- sub.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
 
-        end_date: Union[None, str]
-            Optional; if end_date = None, feteches all datasets 
+        start_date (str): 
+            Fetch all datasets after start_date. 
+            
+            Includes start_date's quarter even if start_date is after the
+            start of the quarter. Date must be written in some ordered DateTime string format
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).
+
+        end_date (Union[None, str]): 
+            Optional; if end_date = None, fetches all datasets 
             before today (UTC) and after start_end.
-            (includes end_date's quarter even if end_date is before the
-            end of the quarter).
 
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+            Includes end_date's quarter even if end_date is before the
+            end of the quarter. Date must be written in some ordered DateTime string format 
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
     """
 
     # Convert datetime string to %d-%m-$Y format
@@ -140,58 +139,3 @@ def process(dir: str,
             data = _process_subs(tmpdir)
 
     return data
-        
-
-# def display_tags(data: pd.DataFrame, 
-#                  custom: bool=False, 
-#                  dtype: bool=False,
-#                  detailed: bool=False,
-#                  numerical: int=2
-# ) -> str:
-#     """Returns tags stored in self.TAG as a string
-#     in a human readable format. 
-
-#     Args:
-#         dataframe(pd.DataFrame):
-
-#         custom (bool):
-#             Optional; 
-
-#         dtype (bool):
-#             Optional; 
-
-#         detailed (bool):
-#             Optional; 
-
-#         numerical (int):
-#             Optional; 
-
-#     Returns:
-#         Tag names and descriptions as a multi-line string.
-
-#     Raise:
-#         ValueError (No TAG table found) if self.TAG is empty.
-#     """
-
-#     tags = data
-#     if custom:
-#         tags = tags[tags['custom'] == 1]
-#     else:
-#         tags = tags[tags['custom'] == 0]
-
-#     full_desc = ''
-#     for i in range(len(tags)):
-#         entry = tags.iloc[i]
-#         attr = (entry['tag'], entry['version'], entry['tlabel'])
-#         tag_desc = f'\nTag: {attr[0]} \
-#                      \nVersion: {attr[1]} \
-#                      \nLabel: {attr[2]}'
-#         if dtype:
-#             attr = entry['datatype']
-#             tag_desc = tag_desc + f'\nDatatype: {attr}'
-#         if detailed:
-#             attr = entry['doc']
-#             tag_desc = tag_desc + f'\nDefinition: {attr}'
-#         full_desc = full_desc + tag_desc
-
-#     return full_desc
