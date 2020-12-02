@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>getgar.dera API documentation</title>
 <meta name="description" content="The `dera` module contains functions to process structured datasets
 produced by the SEC&#39;s Divison of Economic and Risk Analysis …" />
@@ -26,8 +26,12 @@ produced by the SEC&#39;s Divison of Economic and Risk Analysis …" />
 <p>The <code>dera</code> module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.</p>
 <p>Supported datasets from DERA include:
-- Mutual Fund Prospectus Risk / Return Summary
-- Financial Statements</p>
+- Mutual Fund Prospectus Risk and Return Summary
+- Financial Statements and Notes</p>
+<p>Note:
+Each dataset from DERA is a zipfile that contains multiple files in
+a tabular format (e.g. tab-separated values file).
+Each file represents a different data table.</p>
 <p>You can find DERA datasets at <a href="https://www.sec.gov/dera/data">https://www.sec.gov/dera/data</a></p>
 <details class="source">
 <summary>
@@ -38,8 +42,13 @@ The `dera` module contains functions to process structured datasets
 produced by the SEC&#39;s Divison of Economic and Risk Analysis.
 
 Supported datasets from DERA include: 
-    - Mutual Fund Prospectus Risk / Return Summary
-    - Financial Statements
+    - Mutual Fund Prospectus Risk and Return Summary
+    - Financial Statements and Notes
+
+Note: 
+Each dataset from DERA is a zipfile that contains multiple files in 
+a tabular format (e.g. tab-separated values file). 
+Each file represents a different data table.
 
 You can find DERA datasets at https://www.sec.gov/dera/data
 &#34;&#34;&#34;
@@ -61,41 +70,76 @@ from typing import List
 from getgar.utils import unzip
 
 
-def zip_to_tags(dir: str,
-                start_date: str, 
-                end_date: Union[None, str]=None,
 
-) -&gt; pd.DataFrame:
+def _process_tags(tmpdir: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-    between start_date and end_date.
+    found in tmpdir.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
 
     References:
     https://www.sec.gov/info/edgar/edgartaxonomies.shtml
-
-    Args: 
-        dir: str
-            Path to directory containg DERA datasets as zipfiles.
-    
-        start_date: str
-            Fetch all datasets after start_date
-            (includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter).
-
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
-
-        end_date: Union[None, str]
-            Optional; if end_date = None, feteches all datasets 
-            before today (UTC) and after start_end.
-            (includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter).
-
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
     &#34;&#34;&#34;
+
+    # UNION all TAG tables on columns
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    tables = [pd.read_csv(t, sep=&#39;\t&#39;)
+                .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
+    data = pd.concat(tables, axis=0)
+    data = data[~data.index.duplicated(keep=&#39;first&#39;)]
+
+    # Sort TAG tables rows by tag index
+    data = data.sort_index()
+
+    return data
+
+
+def _process_subs(tmpdir: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
+    found in tmpdir.
+    &#34;&#34;&#34;
+    pass
+
+
+def process(dir: str,
+            table: str,
+            start_date: str, 
+            end_date: Union[None, str]=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. 
+
+    Args:
+        dir (str): 
+            Path to directory containg DERA datasets as zipfiles.
+
+        table (str): 
+            Tables in datasets to process.
+            Supported tables (and corresponding datasets) include:
+
+            -  &#39;tag&#39; -- tag.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
+
+            - &#39;sub&#39; -- sub.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
+
+        start_date (str): 
+            Fetch all datasets after start_date. 
+            
+            Includes start_date&#39;s quarter even if start_date is after the
+            start of the quarter. Date must be written in some ordered DateTime string format
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).
+
+        end_date (Union[None, str]): 
+            Optional; if end_date = None, fetches all datasets 
+            before today (UTC) and after start_end.
+
+            Includes end_date&#39;s quarter even if end_date is before the
+            end of the quarter. Date must be written in some ordered DateTime string format 
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+    &#34;&#34;&#34;
+
     # Convert datetime string to %d-%m-$Y format
     start_date = dateutil.parser\
                          .parse(start_date)\
@@ -114,88 +158,26 @@ def zip_to_tags(dir: str,
                     .to_period(&#39;Q&#39;)\
                     .strftime(&#39;%Yq%q&#39;)\
                     .to_list()
+
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
-        # Unzip TAG tables into tmp dir
+        # Unzip tables into tmp dir
         for f in os.listdir(dir):
             path = os.path.join(dir, f)
             if any(q in path for q in date_range):
-                unzip(f&#39;{path}&#39;, &#39;tag.tsv&#39;, tmpdir)
+                unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
                 dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/tag.tsv&#39;, 
-                            f&#39;{tmpdir}/{dataset_name}_tag.tsv&#39;)
+                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;, 
+                            f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
         
-        # UNION all TAG tables on columns
-        table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-        tables = [pd.read_csv(t, sep=&#39;\t&#39;)
-                    .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
-        data = pd.concat(tables, axis=0)
-        data = data[~data.index.duplicated(keep=&#39;first&#39;)]
+        # Process specified table
+        if table == &#39;tag&#39;:
+            data = _process_tags(tmpdir)
+        
+        elif table == &#39;sub&#39;:
+            data = _process_subs(tmpdir)
 
-        # Sort TAG tables rows by tag index
-        data = data.sort_index()
-
-    return data
-
-
-def display_tags(data: pd.DataFrame, 
-                 custom: bool=False, 
-                 dtype: bool=False,
-                 detailed: bool=False,
-                 numerical: int=2
-) -&gt; str:
-    &#34;&#34;&#34;Returns tags stored in self.TAG as a string
-    in a human readable format. 
-
-    Args:
-        dataframe(pd.DataFrame):
-
-
-        custom (bool):
-            Optional; 
-
-        dtype (bool):
-            Optional; 
-
-        detailed (bool):
-            Optional; 
-
-        numerical (int):
-            Optional; 
-
-    Returns:
-        Tag names and descriptions as a multi-line string.
-
-    Raise:
-        ValueError (No TAG table found) if self.TAG is empty.
-    &#34;&#34;&#34;
-    tags = data
-    if custom:
-        tags = tags[tags[&#39;custom&#39;] == 1]
-    else:
-        tags = tags[tags[&#39;custom&#39;] == 0]
-    full_desc = &#39;&#39;
-    for i in range(len(tags)):
-        entry = tags.iloc[i]
-        attr = (entry[&#39;tag&#39;], entry[&#39;version&#39;], entry[&#39;tlabel&#39;])
-        tag_desc = f&#39;\nTag: {attr[0]} \
-                        \nVersion: {attr[1]} \
-                        \nLabel: {attr[2]}&#39;
-        if dtype:
-            attr = entry[&#39;datatype&#39;]
-            tag_desc = tag_desc + f&#39;\nDatatype: {attr}&#39;
-        if detailed:
-            attr = entry[&#39;doc&#39;]
-            tag_desc = tag_desc + f&#39;\nDefinition: {attr}&#39;
-        full_desc = full_desc + tag_desc
-    return full_desc
-
-    
-def zip_to_subs(self, dir: str) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-    between start_date and end_date.
-    &#34;&#34;&#34;
-    pass</code></pre>
+    return data</code></pre>
 </details>
 </section>
 <section>
@@ -205,169 +187,94 @@ def zip_to_subs(self, dir: str) -&gt; pd.DataFrame:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="getgar.dera.display_tags"><code class="name flex">
-<span>def <span class="ident">display_tags</span></span>(<span>data: pandas.core.frame.DataFrame, custom: bool = False, dtype: bool = False, detailed: bool = False, numerical: int = 2) ‑> str</span>
+<dt id="getgar.dera.process"><code class="name flex">
+<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: Union[NoneType, str] = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Returns tags stored in self.TAG as a string
-in a human readable format. </p>
+<div class="desc"><p>Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. </p>
 <h2 id="args">Args</h2>
-<p>dataframe(pd.DataFrame):</p>
-<p>custom (bool):
-Optional; </p>
-<p>dtype (bool):
-Optional; </p>
-<p>detailed (bool):
-Optional; </p>
-<p>numerical (int):
-Optional; </p>
-<h2 id="returns">Returns</h2>
-<p>Tag names and descriptions as a multi-line string.</p>
-<h2 id="raise">Raise</h2>
-<p>ValueError (No TAG table found) if self.TAG is empty.</p></div>
+<dl>
+<dt><strong><code>dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to directory containg DERA datasets as zipfiles.</dd>
+<dt><strong><code>table</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<p>Tables in datasets to process.
+Supported tables (and corresponding datasets) include:</p>
+<ul>
+<li>
+<p>'tag' &ndash; tag.tsv files in:</p>
+<ol>
+<li>Mutual Fund Prospectus Risk and Return Summary</li>
+<li>Financial Statements and Notes.</li>
+</ol>
+</li>
+<li>
+<p>'sub' &ndash; sub.tsv files in:</p>
+<ol>
+<li>Mutual Fund Prospectus Risk and Return Summary</li>
+<li>Financial Statements and Notes.</li>
+</ol>
+</li>
+</ul>
+</dd>
+<dt><strong><code>start_date</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<p>Fetch all datasets after start_date. </p>
+<p>Includes start_date's quarter even if start_date is after the
+start of the quarter. Date must be written in some ordered DateTime string format
+(e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).</p>
+</dd>
+<dt><strong><code>end_date</code></strong> :&ensp;<code>Union[None, str]</code></dt>
+<dd>
+<p>Optional; if end_date = None, fetches all datasets
+before today (UTC) and after start_end.</p>
+<p>Includes end_date's quarter even if end_date is before the
+end of the quarter. Date must be written in some ordered DateTime string format
+(e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)</p>
+</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def display_tags(data: pd.DataFrame, 
-                 custom: bool=False, 
-                 dtype: bool=False,
-                 detailed: bool=False,
-                 numerical: int=2
-) -&gt; str:
-    &#34;&#34;&#34;Returns tags stored in self.TAG as a string
-    in a human readable format. 
+<pre><code class="python">def process(dir: str,
+            table: str,
+            start_date: str, 
+            end_date: Union[None, str]=None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. 
 
     Args:
-        dataframe(pd.DataFrame):
-
-
-        custom (bool):
-            Optional; 
-
-        dtype (bool):
-            Optional; 
-
-        detailed (bool):
-            Optional; 
-
-        numerical (int):
-            Optional; 
-
-    Returns:
-        Tag names and descriptions as a multi-line string.
-
-    Raise:
-        ValueError (No TAG table found) if self.TAG is empty.
-    &#34;&#34;&#34;
-    tags = data
-    if custom:
-        tags = tags[tags[&#39;custom&#39;] == 1]
-    else:
-        tags = tags[tags[&#39;custom&#39;] == 0]
-    full_desc = &#39;&#39;
-    for i in range(len(tags)):
-        entry = tags.iloc[i]
-        attr = (entry[&#39;tag&#39;], entry[&#39;version&#39;], entry[&#39;tlabel&#39;])
-        tag_desc = f&#39;\nTag: {attr[0]} \
-                        \nVersion: {attr[1]} \
-                        \nLabel: {attr[2]}&#39;
-        if dtype:
-            attr = entry[&#39;datatype&#39;]
-            tag_desc = tag_desc + f&#39;\nDatatype: {attr}&#39;
-        if detailed:
-            attr = entry[&#39;doc&#39;]
-            tag_desc = tag_desc + f&#39;\nDefinition: {attr}&#39;
-        full_desc = full_desc + tag_desc
-    return full_desc</code></pre>
-</details>
-</dd>
-<dt id="getgar.dera.zip_to_subs"><code class="name flex">
-<span>def <span class="ident">zip_to_subs</span></span>(<span>self, dir: str) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-between start_date and end_date.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def zip_to_subs(self, dir: str) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-    between start_date and end_date.
-    &#34;&#34;&#34;
-    pass</code></pre>
-</details>
-</dd>
-<dt id="getgar.dera.zip_to_tags"><code class="name flex">
-<span>def <span class="ident">zip_to_tags</span></span>(<span>dir: str, start_date: str, end_date: Union[NoneType, str] = None) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"><p>SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-between start_date and end_date.</p>
-<p>The TAG (Tags) table contains all standard taxonomy tags
-(as of the date) and custom tags.</p>
-<p>References:
-<a href="https://www.sec.gov/info/edgar/edgartaxonomies.shtml">https://www.sec.gov/info/edgar/edgartaxonomies.shtml</a></p>
-<p>Args:
-dir: str
-Path to directory containg DERA datasets as zipfiles.</p>
-<pre><code>start_date: str
-    Fetch all datasets after start_date
-    (includes start_date's quarter even if start_date is after the
-    start of the quarter).
-
-    Date must be written in some ordered DateTime string format 
-    e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
-
-end_date: Union[None, str]
-    Optional; if end_date = None, feteches all datasets 
-    before today (UTC) and after start_end.
-    (includes end_date's quarter even if end_date is before the
-    end of the quarter).
-
-    Date must be written in some ordered DateTime string format 
-    e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def zip_to_tags(dir: str,
-                start_date: str, 
-                end_date: Union[None, str]=None,
-
-) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-    between start_date and end_date.
-
-    The TAG (Tags) table contains all standard taxonomy tags
-    (as of the date) and custom tags.
-
-    References:
-    https://www.sec.gov/info/edgar/edgartaxonomies.shtml
-
-    Args: 
-        dir: str
+        dir (str): 
             Path to directory containg DERA datasets as zipfiles.
-    
-        start_date: str
-            Fetch all datasets after start_date
-            (includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter).
 
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+        table (str): 
+            Tables in datasets to process.
+            Supported tables (and corresponding datasets) include:
 
-        end_date: Union[None, str]
-            Optional; if end_date = None, feteches all datasets 
+            -  &#39;tag&#39; -- tag.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
+
+            - &#39;sub&#39; -- sub.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+                2. Financial Statements and Notes.
+
+        start_date (str): 
+            Fetch all datasets after start_date. 
+            
+            Includes start_date&#39;s quarter even if start_date is after the
+            start of the quarter. Date must be written in some ordered DateTime string format
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).
+
+        end_date (Union[None, str]): 
+            Optional; if end_date = None, fetches all datasets 
             before today (UTC) and after start_end.
-            (includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter).
 
-            Date must be written in some ordered DateTime string format 
-            e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
+            Includes end_date&#39;s quarter even if end_date is before the
+            end of the quarter. Date must be written in some ordered DateTime string format 
+            (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
     &#34;&#34;&#34;
+
     # Convert datetime string to %d-%m-$Y format
     start_date = dateutil.parser\
                          .parse(start_date)\
@@ -386,26 +293,24 @@ end_date: Union[None, str]
                     .to_period(&#39;Q&#39;)\
                     .strftime(&#39;%Yq%q&#39;)\
                     .to_list()
+
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
-        # Unzip TAG tables into tmp dir
+        # Unzip tables into tmp dir
         for f in os.listdir(dir):
             path = os.path.join(dir, f)
             if any(q in path for q in date_range):
-                unzip(f&#39;{path}&#39;, &#39;tag.tsv&#39;, tmpdir)
+                unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
                 dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/tag.tsv&#39;, 
-                            f&#39;{tmpdir}/{dataset_name}_tag.tsv&#39;)
+                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;, 
+                            f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
         
-        # UNION all TAG tables on columns
-        table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-        tables = [pd.read_csv(t, sep=&#39;\t&#39;)
-                    .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
-        data = pd.concat(tables, axis=0)
-        data = data[~data.index.duplicated(keep=&#39;first&#39;)]
-
-        # Sort TAG tables rows by tag index
-        data = data.sort_index()
+        # Process specified table
+        if table == &#39;tag&#39;:
+            data = _process_tags(tmpdir)
+        
+        elif table == &#39;sub&#39;:
+            data = _process_subs(tmpdir)
 
     return data</code></pre>
 </details>
@@ -428,16 +333,14 @@ end_date: Union[None, str]
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="getgar.dera.display_tags" href="#getgar.dera.display_tags">display_tags</a></code></li>
-<li><code><a title="getgar.dera.zip_to_subs" href="#getgar.dera.zip_to_subs">zip_to_subs</a></code></li>
-<li><code><a title="getgar.dera.zip_to_tags" href="#getgar.dera.zip_to_tags">zip_to_tags</a></code></li>
+<li><code><a title="getgar.dera.process" href="#getgar.dera.process">process</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>
