@@ -51,7 +51,7 @@ def process_params(request, tmp_data_directory):
 
 ### UNIT TESTS
 
-# def test_process(process_params):
-#     result = process(*process_params[0])
-#     expected = process_params[1]
-#     assert_frame_equal(result, expected)
+def test_process(process_params):
+    result = process(*process_params[0])
+    expected = process_params[1]
+    assert_frame_equal(result, expected)

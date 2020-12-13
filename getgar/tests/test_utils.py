@@ -39,15 +39,15 @@ def make_path_params(request):
 
 ### UNIT TESTS
 
-# def test_unzip(unzip_params, tmp_data_directory):
-#     """Unzips zip file and saves content (specified by filename)
-#     inside tmp directory.
-#     """
-#     tmpdir = tmp_data_directory + '/unzip'
-#     unzip(*unzip_params[0], tmpdir)
-#     result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
-#     expected = unzip_params[1]
-#     assert result == expected
+def test_unzip(unzip_params, tmp_data_directory):
+    """Unzips zip file and saves content (specified by filename)
+    inside tmp directory.
+    """
+    tmpdir = tmp_data_directory + '/unzip'
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
+    assert result == expected
 
 
 def test_make_path(make_path_params):

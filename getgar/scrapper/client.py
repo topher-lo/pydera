@@ -1,7 +1,10 @@
 """
-The `client` module contains functions to webscape the 
-SEC website and access the EDGAR API. Designed for parallelised 
+The `client` module contains functions to webscape the
+SEC website and access the EDGAR API. Designed for parallelised
 webscrapping within the SEC EDGAR's Fair Access policy.
+
+sec.gov certificate in `certs` directory is valid from 12/15/2020 to
+11/20/2021.
 
 References:
 https://www.sec.gov/developer
@@ -39,6 +42,8 @@ file_handler.setFormatter(formatter)
 # Add file handler to logger
 logger.addHandler(file_handler)
 
+# Path to certificate
+PATH_TO_CERT = 'getgar/scrapper/certs/secgov.cer'
 
 ### Base URLs and paths to datasets
 ### Last Update: 7th November 2020
@@ -76,7 +81,8 @@ def _get(urls: List[str],
          chunk_size: int=128,
          timeout: int=5,
          retry: int=2,
-         delay: int=1) -> None:
+         delay: int=1,
+         path_to_cert=PATH_TO_CERT) -> None:
     """Downloads the given URLs and saves the contents to dir.
 
     Args:
@@ -104,6 +110,9 @@ def _get(urls: List[str],
             processes will sleep between failed requests.
             {delay} * (2 ** ({number of total retries} - 1))
 
+        path_to_cert (str): 
+            Optional; path to server SSL certificate.
+
     Effects: 
         Downloaded files are saved in dir. Exceptions raised by requests
         module are logged and saved.
@@ -129,9 +138,11 @@ def _get(urls: List[str],
         # and 429 rate exceeded client error
         status_forcelist=[429, 500, 502, 503, 504],
         # Only have GET requests in getgar
-        method_whitelist=['GET']
+        allowed_methods=['GET']
     )
-    session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=timeout))
+    session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy,
+                  timeout=timeout))
+    session.verify = path_to_cert
     for url in urls:
         try:
             r = session.get(url, stream=True)
@@ -139,6 +150,9 @@ def _get(urls: List[str],
             logger.warning(err)
             continue
         except requests.exceptions.HTTPError as err:
+            logger.warning(err)
+            continue
+        except requests.exceptions.SSLError as err:
             logger.warning(err)
             continue
         else:

@@ -78,7 +78,7 @@ def process(dir: str,
             Tables in datasets to process.
             Supported tables (and corresponding datasets) include:
 
-            -  'tag' -- tag.tsv files in:
+            - 'tag' -- tag.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
                 2. Financial Statements and Notes.
 
