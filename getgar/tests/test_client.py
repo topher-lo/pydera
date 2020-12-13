@@ -1,13 +1,9 @@
 import os
 import pytest
-import requests
 import responses
 import shutil
 
 from requests_toolbelt import sessions
-
-from requests.exceptions import HTTPError
-from urllib3.exceptions import MaxRetryError
 
 from getgar.scrapper.client import _get
 from getgar.scrapper.client import get_DERA
@@ -25,7 +21,7 @@ test_http = sessions.BaseUrlSession(base_url=f'{TEST_SESSION_URL}')
 assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
 test_http.hooks["response"] = [assert_status_hook]
 
-CONTENT = ['1'*3, 
+CONTENT = ['1'*3,
            '2'*6,
            '3'*13]
 
@@ -74,8 +70,7 @@ def _get_params(request):
 
     rsps, *args = request.param['args']
     urls = [r['url'].split('/')[-1] for r in rsps]
-    
-    return (urls, *args), rsps 
+    return (urls, *args), rsps
 
 
 @pytest.fixture(scope='function', params=TESTCASES['_get_error'])
@@ -83,7 +78,6 @@ def _get_error_params(request):
 
     rsps, *args = request.param['args']
     urls = [r['url'].split('/')[-1] for r in rsps]
-    
     return (urls, *args), rsps
 
 
@@ -92,8 +86,7 @@ def get_params(request):
 
     dataset, dir, *args = request.param['args']
     expected = request.param['expected']
-
-    return (dataset, dir, *args), expected 
+    return (dataset, dir, *args), expected
 
 
 ### UNIT TESTS
@@ -110,14 +103,12 @@ def test_get_(_get_params, tmp_data_directory):
     contents = [r['body'] for r in rsps]
     for r in rsps:
         responses.add(responses.Response(**r))
-    
     _get(urls, tmpdir, *req)
 
     saved = []
     for filename in os.listdir(tmpdir):
         with open(os.path.join(tmpdir, filename), 'r') as f:
-            saved.append(f.read())            
-    
+            saved.append(f.read())
     result = sorted(''.join(saved))
     expected = sorted(''.join(contents))
 
@@ -157,3 +148,7 @@ def test_get(get_params, tmp_data_directory):
     print(saved)
     shutil.rmtree(str(tmpdir))
     assert all(saved)
+
+
+if __name__ == "__main__":
+    pass

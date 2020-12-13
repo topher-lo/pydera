@@ -46,3 +46,7 @@ def make_path(path: str) -> str:
     if not os.path.exists(path):
         os.makedirs(path)
     return path
+
+
+if __name__ == "__main__":
+    pass

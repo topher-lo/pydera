@@ -3,8 +3,6 @@ import os
 import pytest
 import tempfile
 
-from zipfile import ZipFile
-
 from getgar.utils import unzip
 from getgar.utils import make_path
 
@@ -42,7 +40,7 @@ def make_path_params(request):
 ### UNIT TESTS
 
 def test_unzip(unzip_params, tmp_data_directory):
-    """Unzips zip file and saves content (specified by filename) 
+    """Unzips zip file and saves content (specified by filename)
     inside tmp directory.
     """
     tmpdir = tmp_data_directory + '/unzip'

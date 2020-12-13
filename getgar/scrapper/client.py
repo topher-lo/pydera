@@ -49,7 +49,7 @@ DERA_DATA_PATHS = {
     'risk': 'mutual-fund-prospectus-risk/return-summary-data-sets/zipfile'
 }
 DERA_DATA_FILENAMES = {
-    'statements': '%Y2020q%q_notes.zip',
+    'statements': '%Yq%q_notes.zip',
     'risk': '%Yq%q_rr1.zip'
 }
 
