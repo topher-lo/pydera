@@ -70,14 +70,14 @@ class _TimeoutHTTPAdapter(HTTPAdapter):
         return super().send(request, **kwargs)
 
 
-def _get(urls: List[str], 
+def _get(urls: List[str],
          dir: str,
          session: sessions.BaseUrlSession,
-         chunk_size: int=128, 
+         chunk_size: int=128,
          timeout: int=5,
-         retry: int=2, 
+         retry: int=2,
          delay: int=1) -> None:
-    """Downloads the given URLs and saves the contents to dir. 
+    """Downloads the given URLs and saves the contents to dir.
 
     Args:
         urls (list): 
@@ -105,8 +105,8 @@ def _get(urls: List[str],
             {delay} * (2 ** ({number of total retries} - 1))
 
     Effects: 
-        Downloaded files are saved in dir. Exceptions raised by requests 
-        module are logged and saved.            
+        Downloaded files are saved in dir. Exceptions raised by requests
+        module are logged and saved.
 
     Returns: 
         None
@@ -125,7 +125,7 @@ def _get(urls: List[str],
     retry_strategy = Retry(
         total=retry,
         backoff_factor=delay,
-        # requests should incrementally backoff on common 5xx server errors 
+        # requests should incrementally backoff on common 5xx server errors
         # and 429 rate exceeded client error
         status_forcelist=[429, 500, 502, 503, 504],
         # Only have GET requests in getgar
@@ -150,11 +150,11 @@ def _get(urls: List[str],
 
 def get_DERA(dataset: str,
              dir: str,
-             start_date: str, 
+             start_date: str,
              end_date: str,
-             chunk_size: int=128, 
+             chunk_size: int=128,
              timeout: int=5,
-             retry: int=2, 
+             retry: int=2,
              delay: int=1) -> None:
     """Downloads and saves DERA dataset zipfiles for quarters between
     start_date and end_date.
@@ -165,7 +165,7 @@ def get_DERA(dataset: str,
             Supported datasets include:
                 - 'statements': Financial Statements and Notes
                 - 'risk': Mutual Fund Prospectus Risk and Return Summary
-        
+ 
         dir (str): 
             Directory path to save downloaded files in.
 
@@ -178,12 +178,12 @@ def get_DERA(dataset: str,
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
 
         end_date (Union[None, str]): 
-            Optional; if end_date = None, feteches all datasets 
+            Optional; if end_date = None, feteches all datasets
             before today (UTC) and after start_end.
             (includes end_date's quarter even if end_date is before the
             end of the quarter).
 
-            Date must be written in some ordered DateTime string format 
+            Date must be written in some ordered DateTime string format
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
 
         chunk_size (int): 
@@ -198,9 +198,9 @@ def get_DERA(dataset: str,
 
         delay (int): 
             Optional; backoff factor. Determines number of seconds
-            processes will sleep between failed requests.\n
-            sleep seconds = delay * (2 ** ({number of total retries} - 1))
-    
+            processes will sleep between failed requests, where
+            sleep seconds = delay * (2 ** ({number of total retries} - 1)).
+
     Effects:
         Downloaded files are saved in dir.
 
@@ -208,7 +208,7 @@ def get_DERA(dataset: str,
         None
     """
 
-    ### SET-UP
+    # SET-UP
     endpoint = DERA_DATA_PATHS[dataset]
     dera_http = sessions.BaseUrlSession(base_url=f'{DERA_DATA_URL}/{endpoint}')
     assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
@@ -230,11 +230,11 @@ def get_DERA(dataset: str,
 
     # Get list of quarters between start_date and end_date
     start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq='Q')\
-                    .to_period('Q')\
-                    .strftime('%Yq%q')\
-                    .to_list()
-    
+    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
+                               freq='Q').to_period('Q')\
+                                        .strftime('%Yq%q')\
+                                        .to_list()
+
     filename_ext = '_' + filename_format.split('_')[1]
 
     # Create list of urls
@@ -242,4 +242,9 @@ def get_DERA(dataset: str,
 
     # GET and save datasets in dir
     _get(urls, dir, dera_http, chunk_size, timeout, retry, delay)
-    
+
+    return None
+
+
+if __name__ == "__main__":
+    pass
