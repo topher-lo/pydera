@@ -13,8 +13,11 @@ TEST_DATA_PATH = 'getgar/tests/data/'
 
 TESTCASES = {
     'unzip': [
-        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip', 'sub.tsv')},
-        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip', ['tag.tsv', 'sub.tsv'])}],
+        {'args': (f'{TEST_DATA_PATH}/2019q3_rr1.zip', 'sub.tsv'),
+         'expected': 'sub.tsv'},
+        {'args': (f'{TEST_DATA_PATH}/2019q3_rr1.zip',
+                  ['tag.tsv', 'sub.tsv']),
+         'expected': ['tag.tsv', 'sub.tsv']}],
     'make_path': [
         {'args': False},
         {'args': str(TEST_DATA_PATH)}
@@ -27,7 +30,7 @@ TESTCASES = {
 @pytest.fixture(scope='function', params=TESTCASES['unzip'])
 def unzip_params(request):
     args = request.param['args']
-    expected = sorted(''.join(request.param['args'][1]))
+    expected = sorted(''.join(request.param['expected']))
     return args, expected
 
 
