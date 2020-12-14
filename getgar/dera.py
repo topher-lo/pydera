@@ -21,52 +21,66 @@ import tempfile
 import dateutil.parser
 
 from datetime import date
+from tqdm import tqdm
+from typing import Dict
 
 from getgar.utils import unzip
 
 
-
-def _process_tags(tmpdir: str) -> pd.DataFrame:
+def _process_tag(tmpdir: str) -> pd.DataFrame:
     """Concatenate all TAG tables in dataset zipfiles
     found in tmpdir along index (axis=0). Removes duplicate tags.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
 
+    Sets multindex with tag and version attributes.
+
     References:
     https://www.sec.gov/info/edgar/edgartaxonomies.shtml
     """
-
     # UNION all TAG tables on columns
     table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
     tables = [pd.read_csv(t, sep='\t')
                 .set_index(['tag', 'version']) for t in table_paths]
     data = pd.concat(tables, axis=0)
     data = data[~data.index.duplicated(keep='first')]
-
-    # Sort TAG tables rows by tag index
-    data = data.sort_index()
-
     return data
 
 
-def _process_subs(tmpdir: str) -> pd.DataFrame:
+def _process_sub(tmpdir: str, dtype: Dict[str, str] = None) -> pd.DataFrame:
     """Concatenate all SUB tables in dataset zipfiles
     found in tmpdir along index (axis=0).
 
     Sets adsh (20 character EDGAR Accession Number) attribute as index.
     """
     table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-    tables = [pd.read_csv(t, sep='\t') for t in table_paths]
+    tables = []
+    for t in tqdm(table_paths):
+        tables.append(pd.read_csv(t, sep='\t', dtype=dtype))
     data = pd.concat(tables, axis=0).set_index('adsh')
+    return data
 
+
+def _process_txt(tmpdir: str, dtype: Dict[str, str] = None) -> pd.DataFrame:
+    """Concatenate all TXT tables in dataset zipfiles
+    found in tmpdir along index (axis=0).
+
+    Note: no natural key used as index.
+    """
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    tables = []
+    for t in tqdm(table_paths):
+        tables.append(pd.read_csv(t, sep='\t', dtype=dtype))
+    data = pd.concat(tables, axis=0, ignore_index=True)
     return data
 
 
 def process(dir: str,
             table: str,
             start_date: str,
-            end_date: str = None) -> pd.DataFrame:
+            end_date: str = None,
+            dtype: Dict[str, str] = None) -> pd.DataFrame:
     """Processes DERA dataset zipfiles found in dir for quarters between
     start_date and end_date.
 
@@ -86,9 +100,11 @@ def process(dir: str,
                 1. Mutual Fund Prospectus Risk and Return Summary
                 2. Financial Statements and Notes.
 
+            - 'txt' -- txt.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+
         start_date (str): 
             Fetch all datasets after start_date.
-            
             Includes start_date's quarter even if start_date is after the
             start of the quarter. Date must be written in some ordered
             DateTime string format
@@ -102,6 +118,9 @@ def process(dir: str,
             end of the quarter. Date must be written in some ordered DateTime
             string format.
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+        dtype (Dict[str, str]): 
+            Data type for data or columns.
 
     Returns:
         Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
@@ -139,9 +158,12 @@ def process(dir: str,
         
         # Process specified table
         if table == 'tag':
-            data = _process_tags(tmpdir)
+            data = _process_tag(tmpdir, dtype)
         
         elif table == 'sub':
-            data = _process_subs(tmpdir)
+            data = _process_sub(tmpdir, dtype)
+
+        elif table == 'txt':
+            data = _process_txt(tmpdir, dtype)
 
     return data

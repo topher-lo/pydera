@@ -13,8 +13,8 @@ TEST_DATA_PATH = 'getgar/tests/data/'
 
 TESTCASES = {
     'unzip': [
-        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip', 'sub.tsv')},
-        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip', ['tag.tsv', 'sub.tsv'])}],
+        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip', 'sub.tsv')},
+        {'args': (f'{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip', ['tag.tsv', 'sub.tsv'])}],
     'make_path': [
         {'args': False},
         {'args': str(TEST_DATA_PATH)}
@@ -43,7 +43,8 @@ def test_unzip(unzip_params, tmp_data_directory):
     """Unzips zip file and saves content (specified by filename)
     inside tmp directory.
     """
-    tmpdir = tmp_data_directory + '/unzip'
+    tmpdir = tmp_data_directory
+    make_path(tmpdir)
     unzip(*unzip_params[0], tmpdir)
     result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
     expected = unzip_params[1]

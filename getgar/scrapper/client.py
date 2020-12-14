@@ -81,7 +81,7 @@ def _get(urls: List[str],
          chunk_size: int = 128,
          timeout: int = 5,
          retry: int = 2,
-         delay: int = 1,
+         delay: int = 5,
          path_to_cert=PATH_TO_CERT) -> None:
     """Downloads the given URLs and saves the contents to dir.
 
@@ -94,7 +94,7 @@ def _get(urls: List[str],
 
         session (BaseUrlSession): 
             BaseUrlSession instance to use.
-        
+
         chunk_size (int): 
             Optional; chunk size for streaming files.
 
@@ -167,7 +167,7 @@ def get_DERA(dataset: str,
              start_date: str,
              end_date: str,
              chunk_size: int = 128,
-             timeout: int = 5,
+             timeout: int = 120,
              retry: int = 2,
              delay: int = 1) -> None:
     """Downloads and saves DERA dataset zipfiles for quarters between
