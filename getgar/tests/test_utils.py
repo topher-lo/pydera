@@ -42,18 +42,6 @@ def make_path_params(request):
 
 ### UNIT TESTS
 
-def test_unzip(unzip_params, tmp_data_directory):
-    """Unzips zip file and saves content (specified by filename)
-    inside tmp directory.
-    """
-    tmpdir = tmp_data_directory
-    make_path(tmpdir)
-    unzip(*unzip_params[0], tmpdir)
-    result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
-    expected = unzip_params[1]
-    assert result == expected
-
-
 def test_make_path(make_path_params):
     """If directory path exists, returns path.
     Else creates directory and returns path.
@@ -70,3 +58,16 @@ def test_make_path(make_path_params):
         result = make_path(path)
 
     assert result == path and os.path.exists(path)
+
+
+def test_unzip(unzip_params, tmp_data_directory):
+    """Unzips zip file and saves content (specified by filename)
+    inside tmp directory.
+    """
+    tmpdir = tmp_data_directory
+    make_path(tmpdir)
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
+    assert result == expected
+

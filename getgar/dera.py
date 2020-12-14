@@ -158,7 +158,7 @@ def process(dir: str,
         
         # Process specified table
         if table == 'tag':
-            data = _process_tag(tmpdir, dtype)
+            data = _process_tag(tmpdir)
         
         elif table == 'sub':
             data = _process_sub(tmpdir, dtype)
