@@ -72,8 +72,8 @@ from getgar.utils import unzip
 
 
 def _process_tags(tmpdir: str) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;SQL FULL OUTER JOINS all TAG tables in dataset zipfiles
-    found in tmpdir.
+    &#34;&#34;&#34;Concatenate all TAG tables in dataset zipfiles
+    found in tmpdir along index (axis=0). Removes duplicate tags.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
@@ -96,10 +96,16 @@ def _process_tags(tmpdir: str) -&gt; pd.DataFrame:
 
 
 def _process_subs(tmpdir: str) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;SQL FULL OUTER JOINS all SUB tables in dataset zipfiles
-    found in tmpdir.
+    &#34;&#34;&#34;Concatenate all SUB tables in dataset zipfiles
+    found in tmpdir along index (axis=0).
+
+    Sets adsh (20 character EDGAR Accession Number) attribute as index.
     &#34;&#34;&#34;
-    pass
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    table = [pd.read_csv(t, sep=&#39;\t&#39;) for t in table_paths]
+    data = pd.concat(tables, axis=0).set_index(&#39;adsh&#39;)
+
+    return data
 
 
 def process(dir: str,
@@ -138,6 +144,9 @@ def process(dir: str,
             Includes end_date&#39;s quarter even if end_date is before the
             end of the quarter. Date must be written in some ordered DateTime string format 
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+    Returns:
+        Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
     &#34;&#34;&#34;
 
     # Convert datetime string to %d-%m-$Y format
@@ -232,7 +241,9 @@ before today (UTC) and after start_end.</p>
 end of the quarter. Date must be written in some ordered DateTime string format
 (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)</p>
 </dd>
-</dl></div>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -273,6 +284,9 @@ end of the quarter. Date must be written in some ordered DateTime string format
             Includes end_date&#39;s quarter even if end_date is before the
             end of the quarter. Date must be written in some ordered DateTime string format 
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+    Returns:
+        Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
     &#34;&#34;&#34;
 
     # Convert datetime string to %d-%m-$Y format
