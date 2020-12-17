@@ -31,8 +31,6 @@
 import pytest
 import tempfile
 
-from zipfile import ZipFile
-
 from getgar.utils import unzip
 from getgar.utils import make_path
 
@@ -70,7 +68,7 @@ def make_path_params(request):
 ### UNIT TESTS
 
 def test_unzip(unzip_params, tmp_data_directory):
-    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename) 
+    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
     inside tmp directory.
     &#34;&#34;&#34;
     tmpdir = tmp_data_directory + &#39;/unzip&#39;
@@ -159,7 +157,7 @@ inside tmp directory.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_unzip(unzip_params, tmp_data_directory):
-    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename) 
+    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
     inside tmp directory.
     &#34;&#34;&#34;
     tmpdir = tmp_data_directory + &#39;/unzip&#39;

@@ -29,8 +29,8 @@ produced by the SEC's Divison of Economic and Risk Analysis.</p>
 - Mutual Fund Prospectus Risk and Return Summary
 - Financial Statements and Notes</p>
 <p>Note:
-Each dataset from DERA is a zipfile that contains multiple files in
-a tabular format (e.g. tab-separated values file).
+Each dataset from DERA is a zipfile that contains multiple files in a
+tabular format (e.g. tab-separated values file).
 Each file represents a different data table.</p>
 <p>You can find DERA datasets at <a href="https://www.sec.gov/dera/data">https://www.sec.gov/dera/data</a></p>
 <details class="source">
@@ -41,31 +41,25 @@ Each file represents a different data table.</p>
 The `dera` module contains functions to process structured datasets
 produced by the SEC&#39;s Divison of Economic and Risk Analysis.
 
-Supported datasets from DERA include: 
+Supported datasets from DERA include:
     - Mutual Fund Prospectus Risk and Return Summary
     - Financial Statements and Notes
 
-Note: 
-Each dataset from DERA is a zipfile that contains multiple files in 
-a tabular format (e.g. tab-separated values file). 
+Note:
+Each dataset from DERA is a zipfile that contains multiple files in a
+tabular format (e.g. tab-separated values file).
 Each file represents a different data table.
 
 You can find DERA datasets at https://www.sec.gov/dera/data
 &#34;&#34;&#34;
 
-import sys
 import os
-import numpy as np
-import pandas as pd 
-import urllib.error as urlerr
+import pandas as pd
 import tempfile
 
 import dateutil.parser
 
 from datetime import date
-from urllib import request
-from typing import Union
-from typing import List
 
 from getgar.utils import unzip
 
@@ -102,7 +96,7 @@ def _process_subs(tmpdir: str) -&gt; pd.DataFrame:
     Sets adsh (20 character EDGAR Accession Number) attribute as index.
     &#34;&#34;&#34;
     table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-    table = [pd.read_csv(t, sep=&#39;\t&#39;) for t in table_paths]
+    tables = [pd.read_csv(t, sep=&#39;\t&#39;) for t in table_paths]
     data = pd.concat(tables, axis=0).set_index(&#39;adsh&#39;)
 
     return data
@@ -110,9 +104,10 @@ def _process_subs(tmpdir: str) -&gt; pd.DataFrame:
 
 def process(dir: str,
             table: str,
-            start_date: str, 
-            end_date: Union[None, str]=None) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. 
+            start_date: str,
+            end_date: str = None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between
+    start_date and end_date.
 
     Args:
         dir (str): 
@@ -131,18 +126,20 @@ def process(dir: str,
                 2. Financial Statements and Notes.
 
         start_date (str): 
-            Fetch all datasets after start_date. 
+            Fetch all datasets after start_date.
             
             Includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter. Date must be written in some ordered DateTime string format
+            start of the quarter. Date must be written in some ordered
+            DateTime string format
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).
 
         end_date (Union[None, str]): 
-            Optional; if end_date = None, fetches all datasets 
+            Optional; if end_date = None, fetches all datasets
             before today (UTC) and after start_end.
 
             Includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter. Date must be written in some ordered DateTime string format 
+            end of the quarter. Date must be written in some ordered DateTime
+            string format.
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
 
     Returns:
@@ -163,10 +160,10 @@ def process(dir: str,
 
     # Get list of quarters between start_date and end_date
     start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq=&#39;Q&#39;)\
-                    .to_period(&#39;Q&#39;)\
-                    .strftime(&#39;%Yq%q&#39;)\
-                    .to_list()
+    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
+                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
+                                        .strftime(&#39;%Yq%q&#39;)\
+                                        .to_list()
 
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
@@ -176,8 +173,8 @@ def process(dir: str,
             if any(q in path for q in date_range):
                 unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
                 dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;, 
-                            f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
+                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
+                          f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
         
         # Process specified table
         if table == &#39;tag&#39;:
@@ -197,10 +194,11 @@ def process(dir: str,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="getgar.dera.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: Union[NoneType, str] = None) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: str = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. </p>
+<div class="desc"><p>Processes DERA dataset zipfiles found in dir for quarters between
+start_date and end_date.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>dir</code></strong> :&ensp;<code>str</code></dt>
@@ -228,9 +226,10 @@ Supported tables (and corresponding datasets) include:</p>
 </dd>
 <dt><strong><code>start_date</code></strong> :&ensp;<code>str</code></dt>
 <dd>
-<p>Fetch all datasets after start_date. </p>
+<p>Fetch all datasets after start_date.</p>
 <p>Includes start_date's quarter even if start_date is after the
-start of the quarter. Date must be written in some ordered DateTime string format
+start of the quarter. Date must be written in some ordered
+DateTime string format
 (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).</p>
 </dd>
 <dt><strong><code>end_date</code></strong> :&ensp;<code>Union[None, str]</code></dt>
@@ -238,7 +237,8 @@ start of the quarter. Date must be written in some ordered DateTime string forma
 <p>Optional; if end_date = None, fetches all datasets
 before today (UTC) and after start_end.</p>
 <p>Includes end_date's quarter even if end_date is before the
-end of the quarter. Date must be written in some ordered DateTime string format
+end of the quarter. Date must be written in some ordered DateTime
+string format.
 (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)</p>
 </dd>
 </dl>
@@ -250,9 +250,10 @@ end of the quarter. Date must be written in some ordered DateTime string format
 </summary>
 <pre><code class="python">def process(dir: str,
             table: str,
-            start_date: str, 
-            end_date: Union[None, str]=None) -&gt; pd.DataFrame:
-    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between start_date and end_date. 
+            start_date: str,
+            end_date: str = None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between
+    start_date and end_date.
 
     Args:
         dir (str): 
@@ -271,18 +272,20 @@ end of the quarter. Date must be written in some ordered DateTime string format
                 2. Financial Statements and Notes.
 
         start_date (str): 
-            Fetch all datasets after start_date. 
+            Fetch all datasets after start_date.
             
             Includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter. Date must be written in some ordered DateTime string format
+            start of the quarter. Date must be written in some ordered
+            DateTime string format
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).
 
         end_date (Union[None, str]): 
-            Optional; if end_date = None, fetches all datasets 
+            Optional; if end_date = None, fetches all datasets
             before today (UTC) and after start_end.
 
             Includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter. Date must be written in some ordered DateTime string format 
+            end of the quarter. Date must be written in some ordered DateTime
+            string format.
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
 
     Returns:
@@ -303,10 +306,10 @@ end of the quarter. Date must be written in some ordered DateTime string format
 
     # Get list of quarters between start_date and end_date
     start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(), freq=&#39;Q&#39;)\
-                    .to_period(&#39;Q&#39;)\
-                    .strftime(&#39;%Yq%q&#39;)\
-                    .to_list()
+    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
+                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
+                                        .strftime(&#39;%Yq%q&#39;)\
+                                        .to_list()
 
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
@@ -316,8 +319,8 @@ end of the quarter. Date must be written in some ordered DateTime string format
             if any(q in path for q in date_range):
                 unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
                 dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;, 
-                            f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
+                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
+                          f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
         
         # Process specified table
         if table == &#39;tag&#39;:

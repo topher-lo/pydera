@@ -28,14 +28,10 @@
 </summary>
 <pre><code class="python">import os
 import pytest
-import requests
 import responses
 import shutil
 
 from requests_toolbelt import sessions
-
-from requests.exceptions import HTTPError
-from urllib3.exceptions import MaxRetryError
 
 from getgar.scrapper.client import _get
 from getgar.scrapper.client import get_DERA
@@ -53,7 +49,7 @@ test_http = sessions.BaseUrlSession(base_url=f&#39;{TEST_SESSION_URL}&#39;)
 assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
 test_http.hooks[&#34;response&#34;] = [assert_status_hook]
 
-CONTENT = [&#39;1&#39;*3, 
+CONTENT = [&#39;1&#39;*3,
            &#39;2&#39;*6,
            &#39;3&#39;*13]
 
@@ -102,8 +98,7 @@ def _get_params(request):
 
     rsps, *args = request.param[&#39;args&#39;]
     urls = [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r in rsps]
-    
-    return (urls, *args), rsps 
+    return (urls, *args), rsps
 
 
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;_get_error&#39;])
@@ -111,7 +106,6 @@ def _get_error_params(request):
 
     rsps, *args = request.param[&#39;args&#39;]
     urls = [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r in rsps]
-    
     return (urls, *args), rsps
 
 
@@ -120,8 +114,7 @@ def get_params(request):
 
     dataset, dir, *args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-
-    return (dataset, dir, *args), expected 
+    return (dataset, dir, *args), expected
 
 
 ### UNIT TESTS
@@ -138,14 +131,12 @@ def test_get_(_get_params, tmp_data_directory):
     contents = [r[&#39;body&#39;] for r in rsps]
     for r in rsps:
         responses.add(responses.Response(**r))
-    
     _get(urls, tmpdir, *req)
 
     saved = []
     for filename in os.listdir(tmpdir):
         with open(os.path.join(tmpdir, filename), &#39;r&#39;) as f:
-            saved.append(f.read())            
-    
+            saved.append(f.read())
     result = sorted(&#39;&#39;.join(saved))
     expected = sorted(&#39;&#39;.join(contents))
 
@@ -184,7 +175,11 @@ def test_get(get_params, tmp_data_directory):
 
     print(saved)
     shutil.rmtree(str(tmpdir))
-    assert all(saved)</code></pre>
+    assert all(saved)
+
+
+if __name__ == &#34;__main__&#34;:
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -220,8 +215,7 @@ def get_params(request):
 
     dataset, dir, *args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-
-    return (dataset, dir, *args), expected </code></pre>
+    return (dataset, dir, *args), expected</code></pre>
 </details>
 </dd>
 <dt id="getgar.tests.test_client.test_get"><code class="name flex">
@@ -270,14 +264,12 @@ def test_get_(_get_params, tmp_data_directory):
     contents = [r[&#39;body&#39;] for r in rsps]
     for r in rsps:
         responses.add(responses.Response(**r))
-    
     _get(urls, tmpdir, *req)
 
     saved = []
     for filename in os.listdir(tmpdir):
         with open(os.path.join(tmpdir, filename), &#39;r&#39;) as f:
-            saved.append(f.read())            
-    
+            saved.append(f.read())
     result = sorted(&#39;&#39;.join(saved))
     expected = sorted(&#39;&#39;.join(contents))
 
