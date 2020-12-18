@@ -27,6 +27,8 @@ webscrapping within the SEC …" />
 <p>The <code>client</code> module contains functions to webscape the
 SEC website and access the EDGAR API. Designed for parallelised
 webscrapping within the SEC EDGAR's Fair Access policy.</p>
+<p>sec.gov certificate in <code>certs</code> directory is valid from 12/15/2020 to
+11/20/2021.</p>
 <p>References:
 <a href="https://www.sec.gov/developer">https://www.sec.gov/developer</a></p>
 <details class="source">
@@ -34,9 +36,12 @@ webscrapping within the SEC EDGAR's Fair Access policy.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-The `client` module contains functions to webscape the 
-SEC website and access the EDGAR API. Designed for parallelised 
+The `client` module contains functions to webscape the
+SEC website and access the EDGAR API. Designed for parallelised
 webscrapping within the SEC EDGAR&#39;s Fair Access policy.
+
+sec.gov certificate in `certs` directory is valid from 12/15/2020 to
+11/20/2021.
 
 References:
 https://www.sec.gov/developer
@@ -74,6 +79,8 @@ file_handler.setFormatter(formatter)
 # Add file handler to logger
 logger.addHandler(file_handler)
 
+# Path to certificate
+PATH_TO_CERT = &#39;getgar/scrapper/certs/secgov.cer&#39;
 
 ### Base URLs and paths to datasets
 ### Last Update: 7th November 2020
@@ -111,7 +118,8 @@ def _get(urls: List[str],
          chunk_size: int=128,
          timeout: int=5,
          retry: int=2,
-         delay: int=1) -&gt; None:
+         delay: int=1,
+         path_to_cert=PATH_TO_CERT) -&gt; None:
     &#34;&#34;&#34;Downloads the given URLs and saves the contents to dir.
 
     Args:
@@ -139,6 +147,9 @@ def _get(urls: List[str],
             processes will sleep between failed requests.
             {delay} * (2 ** ({number of total retries} - 1))
 
+        path_to_cert (str): 
+            Optional; path to server SSL certificate.
+
     Effects: 
         Downloaded files are saved in dir. Exceptions raised by requests
         module are logged and saved.
@@ -164,9 +175,11 @@ def _get(urls: List[str],
         # and 429 rate exceeded client error
         status_forcelist=[429, 500, 502, 503, 504],
         # Only have GET requests in getgar
-        method_whitelist=[&#39;GET&#39;]
+        allowed_methods=[&#39;GET&#39;]
     )
-    session.mount(&#39;https://&#39;, _TimeoutHTTPAdapter(max_retries=retry_strategy, timeout=timeout))
+    session.mount(&#39;https://&#39;, _TimeoutHTTPAdapter(max_retries=retry_strategy,
+                  timeout=timeout))
+    session.verify = path_to_cert
     for url in urls:
         try:
             r = session.get(url, stream=True)
@@ -174,6 +187,9 @@ def _get(urls: List[str],
             logger.warning(err)
             continue
         except requests.exceptions.HTTPError as err:
+            logger.warning(err)
+            continue
+        except requests.exceptions.SSLError as err:
             logger.warning(err)
             continue
         else:

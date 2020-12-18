@@ -67,15 +67,15 @@ def make_path_params(request):
 
 ### UNIT TESTS
 
-# def test_unzip(unzip_params, tmp_data_directory):
-#     &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
-#     inside tmp directory.
-#     &#34;&#34;&#34;
-#     tmpdir = tmp_data_directory + &#39;/unzip&#39;
-#     unzip(*unzip_params[0], tmpdir)
-#     result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
-#     expected = unzip_params[1]
-#     assert result == expected
+def test_unzip(unzip_params, tmp_data_directory):
+    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
+    inside tmp directory.
+    &#34;&#34;&#34;
+    tmpdir = tmp_data_directory + &#39;/unzip&#39;
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
+    assert result == expected
 
 
 def test_make_path(make_path_params):
@@ -146,6 +146,27 @@ Else creates directory and returns path.</p></div>
     assert result == path and os.path.exists(path)</code></pre>
 </details>
 </dd>
+<dt id="getgar.tests.test_utils.test_unzip"><code class="name flex">
+<span>def <span class="ident">test_unzip</span></span>(<span>unzip_params, tmp_data_directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unzips zip file and saves content (specified by filename)
+inside tmp directory.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_unzip(unzip_params, tmp_data_directory):
+    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
+    inside tmp directory.
+    &#34;&#34;&#34;
+    tmpdir = tmp_data_directory + &#39;/unzip&#39;
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
+    assert result == expected</code></pre>
+</details>
+</dd>
 <dt id="getgar.tests.test_utils.unzip_params"><code class="name flex">
 <span>def <span class="ident">unzip_params</span></span>(<span>request)</span>
 </code></dt>
@@ -182,6 +203,7 @@ def unzip_params(request):
 <ul class="">
 <li><code><a title="getgar.tests.test_utils.make_path_params" href="#getgar.tests.test_utils.make_path_params">make_path_params</a></code></li>
 <li><code><a title="getgar.tests.test_utils.test_make_path" href="#getgar.tests.test_utils.test_make_path">test_make_path</a></code></li>
+<li><code><a title="getgar.tests.test_utils.test_unzip" href="#getgar.tests.test_utils.test_unzip">test_unzip</a></code></li>
 <li><code><a title="getgar.tests.test_utils.unzip_params" href="#getgar.tests.test_utils.unzip_params">unzip_params</a></code></li>
 </ul>
 </li>
