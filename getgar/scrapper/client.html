@@ -115,10 +115,10 @@ class _TimeoutHTTPAdapter(HTTPAdapter):
 def _get(urls: List[str],
          dir: str,
          session: sessions.BaseUrlSession,
-         chunk_size: int=128,
-         timeout: int=5,
-         retry: int=2,
-         delay: int=1,
+         chunk_size: int = 128,
+         timeout: int = 5,
+         retry: int = 2,
+         delay: int = 1,
          path_to_cert=PATH_TO_CERT) -&gt; None:
     &#34;&#34;&#34;Downloads the given URLs and saves the contents to dir.
 
@@ -203,10 +203,10 @@ def get_DERA(dataset: str,
              dir: str,
              start_date: str,
              end_date: str,
-             chunk_size: int=128,
-             timeout: int=5,
-             retry: int=2,
-             delay: int=1) -&gt; None:
+             chunk_size: int = 128,
+             timeout: int = 5,
+             retry: int = 2,
+             delay: int = 1) -&gt; None:
     &#34;&#34;&#34;Downloads and saves DERA dataset zipfiles for quarters between
     start_date and end_date.
 
@@ -364,10 +364,10 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
              dir: str,
              start_date: str,
              end_date: str,
-             chunk_size: int=128,
-             timeout: int=5,
-             retry: int=2,
-             delay: int=1) -&gt; None:
+             chunk_size: int = 128,
+             timeout: int = 5,
+             retry: int = 2,
+             delay: int = 1) -&gt; None:
     &#34;&#34;&#34;Downloads and saves DERA dataset zipfiles for quarters between
     start_date and end_date.
 
