@@ -4,6 +4,7 @@ import responses
 import shutil
 
 from requests_toolbelt import sessions
+from getgar import utils
 
 from getgar.scrapper.client import _get
 from getgar.scrapper.client import get_DERA
@@ -50,14 +51,14 @@ RESPONSES = {
 
 TESTCASES = {
     '_get': [
-        {'args': ([r for r in RESPONSES['200']], '_get', test_http, 3, 1, 2, 1)},
+        {'args': ([r for r in RESPONSES['200']], test_http, 3, 1, 2, 1)},
     ],
     '_get_error': [
-        {'args': ([RESPONSES['403']], '_get_error', test_http, 3, 1, 2, 1)},
-        {'args': ([RESPONSES['500']], '_get_error', test_http, 3, 1, 2, 1)}
+        {'args': ([RESPONSES['403']], test_http, 3, 1, 2, 1)},
+        {'args': ([RESPONSES['500']], test_http, 3, 1, 2, 1)}
     ],
     'get': [
-        {'args': ('risk', 'get', '01-05-2019', '15-12-2019'),
+        {'args': ('risk', '01-05-2019', '15-12-2019'),
          'expected': ['2019q2_rr1.zip', '2019q3_rr1.zip']}
     ]
 }
@@ -84,9 +85,9 @@ def _get_error_params(request):
 @pytest.fixture(scope='function', params=TESTCASES['get'])
 def get_params(request):
 
-    dataset, dir, *args = request.param['args']
+    dataset, *args = request.param['args']
     expected = request.param['expected']
-    return (dataset, dir, *args), expected
+    return (dataset, *args), expected
 
 
 ### UNIT TESTS
@@ -95,9 +96,9 @@ def get_params(request):
 def test_get_(_get_params, tmp_data_directory):
     """Downloads and saves files from test urls.
     """
-    urls, dir, *req = _get_params[0]
-    tmpdir = f'{tmp_data_directory}/{dir}'
-    os.mkdir(tmpdir)
+    urls, *req = _get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_params[1]
     contents = [r['body'] for r in rsps]
@@ -121,9 +122,9 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     """Captures HTTPError and MaxRetryError exceptions.
     """
 
-    urls, dir, *req = _get_error_params[0]
-    tmpdir = f'{tmp_data_directory}/{dir}'
-    os.mkdir(tmpdir)
+    urls, *req = _get_error_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_error_params[1][0]
     responses.add(responses.Response(**rsps))
@@ -134,13 +135,14 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     assert str(rsps['status']) in caplog.text
 
 
+@pytest.mark.webtest
 def test_get(get_params, tmp_data_directory):
     """Downloads and saves files from DERA.
     """
 
-    dataset, dir, *args = get_params[0]
-    tmpdir = f'{tmp_data_directory}/{dir}'
-    os.mkdir(tmpdir)
+    dataset, *args = get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     get_DERA(dataset, tmpdir, *args)
     saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_params[1]]
