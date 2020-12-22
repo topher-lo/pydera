@@ -41,8 +41,11 @@ TEST_DATA_PATH = &#39;getgar/tests/data/&#39;
 
 TESTCASES = {
     &#39;unzip&#39;: [
-        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, &#39;sub.tsv&#39;)},
-        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, [&#39;tag.tsv&#39;, &#39;sub.tsv&#39;])}],
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/2019q3_rr1.zip&#39;, &#39;sub.tsv&#39;),
+         &#39;expected&#39;: &#39;sub.tsv&#39;},
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/2019q3_rr1.zip&#39;,
+                  [&#39;tag.tsv&#39;, &#39;sub.tsv&#39;]),
+         &#39;expected&#39;: [&#39;tag.tsv&#39;, &#39;sub.tsv&#39;]}],
     &#39;make_path&#39;: [
         {&#39;args&#39;: False},
         {&#39;args&#39;: str(TEST_DATA_PATH)}
@@ -55,7 +58,7 @@ TESTCASES = {
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;unzip&#39;])
 def unzip_params(request):
     args = request.param[&#39;args&#39;]
-    expected = sorted(&#39;&#39;.join(request.param[&#39;args&#39;][1]))
+    expected = sorted(&#39;&#39;.join(request.param[&#39;expected&#39;]))
     return args, expected
 
 
@@ -66,17 +69,6 @@ def make_path_params(request):
 
 
 ### UNIT TESTS
-
-def test_unzip(unzip_params, tmp_data_directory):
-    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
-    inside tmp directory.
-    &#34;&#34;&#34;
-    tmpdir = tmp_data_directory + &#39;/unzip&#39;
-    unzip(*unzip_params[0], tmpdir)
-    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
-    expected = unzip_params[1]
-    assert result == expected
-
 
 def test_make_path(make_path_params):
     &#34;&#34;&#34;If directory path exists, returns path.
@@ -93,7 +85,19 @@ def test_make_path(make_path_params):
         path = test_path
         result = make_path(path)
 
-    assert result == path and os.path.exists(path)</code></pre>
+    assert result == path and os.path.exists(path)
+
+
+def test_unzip(unzip_params, tmp_data_directory):
+    &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
+    inside tmp directory.
+    &#34;&#34;&#34;
+    tmpdir = tmp_data_directory
+    make_path(tmpdir)
+    unzip(*unzip_params[0], tmpdir)
+    result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
+    expected = unzip_params[1]
+    assert result == expected</code></pre>
 </details>
 </section>
 <section>
@@ -160,7 +164,8 @@ inside tmp directory.</p></div>
     &#34;&#34;&#34;Unzips zip file and saves content (specified by filename)
     inside tmp directory.
     &#34;&#34;&#34;
-    tmpdir = tmp_data_directory + &#39;/unzip&#39;
+    tmpdir = tmp_data_directory
+    make_path(tmpdir)
     unzip(*unzip_params[0], tmpdir)
     result = sorted(&#39;&#39;.join([str(f) for f in os.listdir(tmpdir)]))
     expected = unzip_params[1]
@@ -179,7 +184,7 @@ inside tmp directory.</p></div>
 <pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;unzip&#39;])
 def unzip_params(request):
     args = request.param[&#39;args&#39;]
-    expected = sorted(&#39;&#39;.join(request.param[&#39;args&#39;][1]))
+    expected = sorted(&#39;&#39;.join(request.param[&#39;expected&#39;]))
     return args, expected</code></pre>
 </details>
 </dd>

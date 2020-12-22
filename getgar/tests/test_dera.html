@@ -26,62 +26,127 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import os
-import pytest
+<pre><code class="python">import pytest
 
 import pandas as pd
 
-from pandas.testing import assert_frame_equal
+from getgar import utils
 
-from getgar.utils import unzip
+from pandas.testing import assert_frame_equal
 from getgar.dera import process
+
 
 ### TESTCASES
 
 TEST_DATA_PATH = &#39;getgar/tests/data&#39;
 
 TESTCASES = {
-    &#39;process&#39;: [
-        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}/mutual_fund&#39;,
+    &#39;process_tag&#39;: [
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
                   &#39;tag&#39;,
-                  &#39;01-05-2019&#39;,
-                  &#39;15-12-2019&#39;)}
+                  &#39;01-01-2020&#39;),
+         &#39;expected&#39;: pd.DataFrame({
+             &#39;tag&#39;: [&#39;AcquiredFundFeesAndExpensesBasedOnEstimates&#39;,
+                     &#39;AmendmentFlag&#39;,
+                     &#39;AmendmentFlag&#39;,
+                     &#39;AnnualFundOperatingExpensesTableTextBlock&#39;,
+                     &#39;AnnualReturn2006&#39;],
+             &#39;version&#39;: [&#39;rr/2012&#39;,
+                         &#39;dei/2012&#39;,
+                         &#39;dei/2014&#39;,
+                         &#39;rr/2012&#39;,
+                         &#39;rr/2012&#39;],
+             &#39;dummy_value&#39;: [&#39;lorem2020q1&#39;,
+                             &#39;ipsum2020q1&#39;,
+                             &#39;dolor2020q1&#39;,
+                             &#39;sit2020q1&#39;,
+                             &#39;amet2020q1&#39;]}).set_index([&#39;tag&#39;, &#39;version&#39;])}
+    ],
+    &#39;process_sub&#39;: [
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;sub&#39;,
+                  &#39;01-10-2019&#39;,
+                  &#39;15-12-2019&#39;),
+         &#39;expected&#39;: pd.DataFrame({
+             &#39;adsh&#39;: [&#39;0000000001-01-000001&#39;,
+                      &#39;0000000001-01-000002&#39;,
+                      &#39;0000000001-01-000003&#39;],
+             &#39;dummy_val&#39;: [&#39;lorem2019q4&#39;,
+                           None,
+                           &#39;dolor2019q4&#39;]}).set_index(&#39;adsh&#39;)}
+    ],
+    &#39;process&#39;: [
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;txt&#39;,
+                  &#39;01-07-2019&#39;,
+                  &#39;15-12-2019&#39;),
+         &#39;expected&#39;: pd.DataFrame({
+             &#39;adsh&#39;: [&#39;0000000001-01-000001&#39;,
+                      &#39;0000000001-01-000002&#39;,
+                      &#39;0000000001-01-000003&#39;]*2,
+             &#39;dummy_val&#39;: [&#39;lorem2019q3&#39;, None, &#39;ipsum2019q3&#39;,
+                           &#39;lorem2019q4&#39;, None, &#39;ipsum2019q4&#39;]})},
+        {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;txt&#39;,
+                  &#39;01-10-2019&#39;,
+                  &#39;15-01-2020&#39;),
+         &#39;expected&#39;: pd.DataFrame({
+             &#39;adsh&#39;: [&#39;0000000001-01-000001&#39;,
+                      &#39;0000000001-01-000002&#39;,
+                      &#39;0000000001-01-000003&#39;]*2,
+             &#39;dummy_val&#39;: [&#39;lorem2020q1&#39;, None, &#39;ipsum2020q1&#39;,
+                           &#39;lorem2019q4&#39;, None, &#39;ipsum2019q4&#39;]})}
     ],
 }
 
 ### FIXTURES
 
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process_tag&#39;])
+def process_tag_params(request, tmp_data_directory):
+    args = request.param[&#39;args&#39;]
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    return args, expected
+
+
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process_sub&#39;])
+def process_sub_params(request, tmp_data_directory):
+    args = request.param[&#39;args&#39;]
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    return args, expected
+
+
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process&#39;])
 def process_params(request, tmp_data_directory):
-
     args = request.param[&#39;args&#39;]
-
-    tmpdir = tmp_data_directory + &#39;/process&#39;
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q2.tsv&#39;) 
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q3.tsv&#39;) 
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q4_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q4.tsv&#39;) 
-
-    q2_2019 = pd.read_csv(f&#39;{tmpdir}/2019q2.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-    q3_2019 = pd.read_csv(f&#39;{tmpdir}/2019q3.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-    q4_2019 = pd.read_csv(f&#39;{tmpdir}/2019q4.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-
-    expected = pd.concat([q2_2019, q3_2019, q4_2019], axis=0)
-    expected = expected[~expected.index.duplicated(keep=&#39;first&#39;)].sort_index()
-
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
     return args, expected
 
 
 ### UNIT TESTS
 
+def test_process_tag(process_tag_params):
+    result = process(*process_tag_params[0])
+    expected = process_tag_params[1]
+    assert_frame_equal(result, expected)
+
+
+def test_process_sub(process_sub_params):
+    result = process(*process_sub_params[0])
+    expected = process_sub_params[1]
+    assert_frame_equal(result, expected)
+
+
 def test_process(process_params):
-    result = process(*process_params[0])
-    expected = process_params[1]
+    result = process(*process_params[0]).sort_values(&#39;dummy_val&#39;)\
+                                        .reset_index(drop=True)
+    expected = process_params[1].sort_values(&#39;dummy_val&#39;)\
+                                .reset_index(drop=True)
     assert_frame_equal(result, expected)</code></pre>
 </details>
 </section>
@@ -103,27 +168,46 @@ def test_process(process_params):
 </summary>
 <pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process&#39;])
 def process_params(request, tmp_data_directory):
-
     args = request.param[&#39;args&#39;]
-
-    tmpdir = tmp_data_directory + &#39;/process&#39;
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q2_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q2.tsv&#39;) 
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q3_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q3.tsv&#39;) 
-
-    unzip(f&#39;{TEST_DATA_PATH}/mutual_fund/2019q4_rr1.zip&#39;, &#39;tag.tsv&#39;, tmpdir)
-    os.rename(f&#39;{tmpdir}/tag.tsv&#39;, f&#39;{tmpdir}/2019q4.tsv&#39;) 
-
-    q2_2019 = pd.read_csv(f&#39;{tmpdir}/2019q2.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-    q3_2019 = pd.read_csv(f&#39;{tmpdir}/2019q3.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-    q4_2019 = pd.read_csv(f&#39;{tmpdir}/2019q4.tsv&#39;, sep=&#39;\t&#39;).set_index([&#39;tag&#39;, &#39;version&#39;])
-
-    expected = pd.concat([q2_2019, q3_2019, q4_2019], axis=0)
-    expected = expected[~expected.index.duplicated(keep=&#39;first&#39;)].sort_index()
-
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    return args, expected</code></pre>
+</details>
+</dd>
+<dt id="getgar.tests.test_dera.process_sub_params"><code class="name flex">
+<span>def <span class="ident">process_sub_params</span></span>(<span>request, tmp_data_directory)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process_sub&#39;])
+def process_sub_params(request, tmp_data_directory):
+    args = request.param[&#39;args&#39;]
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    return args, expected</code></pre>
+</details>
+</dd>
+<dt id="getgar.tests.test_dera.process_tag_params"><code class="name flex">
+<span>def <span class="ident">process_tag_params</span></span>(<span>request, tmp_data_directory)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process_tag&#39;])
+def process_tag_params(request, tmp_data_directory):
+    args = request.param[&#39;args&#39;]
+    expected = request.param[&#39;expected&#39;]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
     return args, expected</code></pre>
 </details>
 </dd>
@@ -137,8 +221,40 @@ def process_params(request, tmp_data_directory):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_process(process_params):
-    result = process(*process_params[0])
-    expected = process_params[1]
+    result = process(*process_params[0]).sort_values(&#39;dummy_val&#39;)\
+                                        .reset_index(drop=True)
+    expected = process_params[1].sort_values(&#39;dummy_val&#39;)\
+                                .reset_index(drop=True)
+    assert_frame_equal(result, expected)</code></pre>
+</details>
+</dd>
+<dt id="getgar.tests.test_dera.test_process_sub"><code class="name flex">
+<span>def <span class="ident">test_process_sub</span></span>(<span>process_sub_params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_process_sub(process_sub_params):
+    result = process(*process_sub_params[0])
+    expected = process_sub_params[1]
+    assert_frame_equal(result, expected)</code></pre>
+</details>
+</dd>
+<dt id="getgar.tests.test_dera.test_process_tag"><code class="name flex">
+<span>def <span class="ident">test_process_tag</span></span>(<span>process_tag_params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_process_tag(process_tag_params):
+    result = process(*process_tag_params[0])
+    expected = process_tag_params[1]
     assert_frame_equal(result, expected)</code></pre>
 </details>
 </dd>
@@ -159,9 +275,13 @@ def process_params(request, tmp_data_directory):
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="getgar.tests.test_dera.process_params" href="#getgar.tests.test_dera.process_params">process_params</a></code></li>
+<li><code><a title="getgar.tests.test_dera.process_sub_params" href="#getgar.tests.test_dera.process_sub_params">process_sub_params</a></code></li>
+<li><code><a title="getgar.tests.test_dera.process_tag_params" href="#getgar.tests.test_dera.process_tag_params">process_tag_params</a></code></li>
 <li><code><a title="getgar.tests.test_dera.test_process" href="#getgar.tests.test_dera.test_process">test_process</a></code></li>
+<li><code><a title="getgar.tests.test_dera.test_process_sub" href="#getgar.tests.test_dera.test_process_sub">test_process_sub</a></code></li>
+<li><code><a title="getgar.tests.test_dera.test_process_tag" href="#getgar.tests.test_dera.test_process_tag">test_process_tag</a></code></li>
 </ul>
 </li>
 </ul>

@@ -60,52 +60,66 @@ import tempfile
 import dateutil.parser
 
 from datetime import date
+from tqdm import tqdm
+from typing import Dict
 
 from getgar.utils import unzip
 
 
-
-def _process_tags(tmpdir: str) -&gt; pd.DataFrame:
+def _process_tag(tmpdir: str) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Concatenate all TAG tables in dataset zipfiles
     found in tmpdir along index (axis=0). Removes duplicate tags.
 
     The TAG (Tags) table contains all standard taxonomy tags
     (as of the date) and custom tags.
 
+    Sets multindex with tag and version attributes.
+
     References:
     https://www.sec.gov/info/edgar/edgartaxonomies.shtml
     &#34;&#34;&#34;
-
     # UNION all TAG tables on columns
     table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
     tables = [pd.read_csv(t, sep=&#39;\t&#39;)
                 .set_index([&#39;tag&#39;, &#39;version&#39;]) for t in table_paths]
     data = pd.concat(tables, axis=0)
     data = data[~data.index.duplicated(keep=&#39;first&#39;)]
-
-    # Sort TAG tables rows by tag index
-    data = data.sort_index()
-
     return data
 
 
-def _process_subs(tmpdir: str) -&gt; pd.DataFrame:
+def _process_sub(tmpdir: str, dtype: Dict[str, str] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Concatenate all SUB tables in dataset zipfiles
     found in tmpdir along index (axis=0).
 
     Sets adsh (20 character EDGAR Accession Number) attribute as index.
     &#34;&#34;&#34;
     table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
-    tables = [pd.read_csv(t, sep=&#39;\t&#39;) for t in table_paths]
+    tables = []
+    for t in tqdm(table_paths):
+        tables.append(pd.read_csv(t, sep=&#39;\t&#39;, dtype=dtype))
     data = pd.concat(tables, axis=0).set_index(&#39;adsh&#39;)
+    return data
 
+
+def _process_txt(tmpdir: str, dtype: Dict[str, str] = None) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Concatenate all TXT tables in dataset zipfiles
+    found in tmpdir along index (axis=0).
+
+    Note: no natural key used as index.
+    &#34;&#34;&#34;
+    table_paths = [os.path.join(tmpdir, f) for f in os.listdir(tmpdir)]
+    tables = []
+    for t in tqdm(table_paths):
+        tables.append(pd.read_csv(t, sep=&#39;\t&#39;, dtype=dtype))
+    data = pd.concat(tables, axis=0, ignore_index=True)
     return data
 
 
 def process(dir: str,
             table: str,
             start_date: str,
-            end_date: str = None) -&gt; pd.DataFrame:
+            end_date: str = None,
+            dtype: Dict[str, str] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between
     start_date and end_date.
 
@@ -125,9 +139,11 @@ def process(dir: str,
                 1. Mutual Fund Prospectus Risk and Return Summary
                 2. Financial Statements and Notes.
 
+            - &#39;txt&#39; -- txt.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+
         start_date (str): 
             Fetch all datasets after start_date.
-            
             Includes start_date&#39;s quarter even if start_date is after the
             start of the quarter. Date must be written in some ordered
             DateTime string format
@@ -141,6 +157,9 @@ def process(dir: str,
             end of the quarter. Date must be written in some ordered DateTime
             string format.
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+        dtype (Dict[str, str]): 
+            Data type for data or columns.
 
     Returns:
         Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
@@ -178,10 +197,13 @@ def process(dir: str,
         
         # Process specified table
         if table == &#39;tag&#39;:
-            data = _process_tags(tmpdir)
+            data = _process_tag(tmpdir)
         
         elif table == &#39;sub&#39;:
-            data = _process_subs(tmpdir)
+            data = _process_sub(tmpdir, dtype)
+
+        elif table == &#39;txt&#39;:
+            data = _process_txt(tmpdir, dtype)
 
     return data</code></pre>
 </details>
@@ -194,7 +216,7 @@ def process(dir: str,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="getgar.dera.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: str = None) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: str = None, dtype: Dict[str, str] = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Processes DERA dataset zipfiles found in dir for quarters between
@@ -222,16 +244,20 @@ Supported tables (and corresponding datasets) include:</p>
 <li>Financial Statements and Notes.</li>
 </ol>
 </li>
+<li>
+<p>'txt' &ndash; txt.tsv files in:</p>
+<ol>
+<li>Mutual Fund Prospectus Risk and Return Summary</li>
+</ol>
+</li>
 </ul>
 </dd>
 <dt><strong><code>start_date</code></strong> :&ensp;<code>str</code></dt>
-<dd>
-<p>Fetch all datasets after start_date.</p>
-<p>Includes start_date's quarter even if start_date is after the
+<dd>Fetch all datasets after start_date.
+Includes start_date's quarter even if start_date is after the
 start of the quarter. Date must be written in some ordered
 DateTime string format
-(e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).</p>
-</dd>
+(e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD).</dd>
 <dt><strong><code>end_date</code></strong> :&ensp;<code>Union[None, str]</code></dt>
 <dd>
 <p>Optional; if end_date = None, fetches all datasets
@@ -241,6 +267,8 @@ end of the quarter. Date must be written in some ordered DateTime
 string format.
 (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)</p>
 </dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>Dict[str, str]</code></dt>
+<dd>Data type for data or columns.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.</p></div>
@@ -251,7 +279,8 @@ string format.
 <pre><code class="python">def process(dir: str,
             table: str,
             start_date: str,
-            end_date: str = None) -&gt; pd.DataFrame:
+            end_date: str = None,
+            dtype: Dict[str, str] = None) -&gt; pd.DataFrame:
     &#34;&#34;&#34;Processes DERA dataset zipfiles found in dir for quarters between
     start_date and end_date.
 
@@ -271,9 +300,11 @@ string format.
                 1. Mutual Fund Prospectus Risk and Return Summary
                 2. Financial Statements and Notes.
 
+            - &#39;txt&#39; -- txt.tsv files in:
+                1. Mutual Fund Prospectus Risk and Return Summary
+
         start_date (str): 
             Fetch all datasets after start_date.
-            
             Includes start_date&#39;s quarter even if start_date is after the
             start of the quarter. Date must be written in some ordered
             DateTime string format
@@ -287,6 +318,9 @@ string format.
             end of the quarter. Date must be written in some ordered DateTime
             string format.
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
+
+        dtype (Dict[str, str]): 
+            Data type for data or columns.
 
     Returns:
         Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
@@ -324,10 +358,13 @@ string format.
         
         # Process specified table
         if table == &#39;tag&#39;:
-            data = _process_tags(tmpdir)
+            data = _process_tag(tmpdir)
         
         elif table == &#39;sub&#39;:
-            data = _process_subs(tmpdir)
+            data = _process_sub(tmpdir, dtype)
+
+        elif table == &#39;txt&#39;:
+            data = _process_txt(tmpdir, dtype)
 
     return data</code></pre>
 </details>

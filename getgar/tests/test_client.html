@@ -32,6 +32,7 @@ import responses
 import shutil
 
 from requests_toolbelt import sessions
+from getgar import utils
 
 from getgar.scrapper.client import _get
 from getgar.scrapper.client import get_DERA
@@ -78,14 +79,14 @@ RESPONSES = {
 
 TESTCASES = {
     &#39;_get&#39;: [
-        {&#39;args&#39;: ([r for r in RESPONSES[&#39;200&#39;]], &#39;_get&#39;, test_http, 3, 1, 2, 1)},
+        {&#39;args&#39;: ([r for r in RESPONSES[&#39;200&#39;]], test_http, 3, 1, 2, 1)},
     ],
     &#39;_get_error&#39;: [
-        {&#39;args&#39;: ([RESPONSES[&#39;403&#39;]], &#39;_get_error&#39;, test_http, 3, 1, 2, 1)},
-        {&#39;args&#39;: ([RESPONSES[&#39;500&#39;]], &#39;_get_error&#39;, test_http, 3, 1, 2, 1)}
+        {&#39;args&#39;: ([RESPONSES[&#39;403&#39;]], test_http, 3, 1, 2, 1)},
+        {&#39;args&#39;: ([RESPONSES[&#39;500&#39;]], test_http, 3, 1, 2, 1)}
     ],
     &#39;get&#39;: [
-        {&#39;args&#39;: (&#39;risk&#39;, &#39;get&#39;, &#39;01-05-2019&#39;, &#39;15-12-2019&#39;),
+        {&#39;args&#39;: (&#39;risk&#39;, &#39;01-05-2019&#39;, &#39;15-12-2019&#39;),
          &#39;expected&#39;: [&#39;2019q2_rr1.zip&#39;, &#39;2019q3_rr1.zip&#39;]}
     ]
 }
@@ -112,9 +113,9 @@ def _get_error_params(request):
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get&#39;])
 def get_params(request):
 
-    dataset, dir, *args = request.param[&#39;args&#39;]
+    dataset, *args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    return (dataset, dir, *args), expected
+    return (dataset, *args), expected
 
 
 ### UNIT TESTS
@@ -123,9 +124,9 @@ def get_params(request):
 def test_get_(_get_params, tmp_data_directory):
     &#34;&#34;&#34;Downloads and saves files from test urls.
     &#34;&#34;&#34;
-    urls, dir, *req = _get_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    urls, *req = _get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_params[1]
     contents = [r[&#39;body&#39;] for r in rsps]
@@ -149,9 +150,9 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     &#34;&#34;&#34;Captures HTTPError and MaxRetryError exceptions.
     &#34;&#34;&#34;
 
-    urls, dir, *req = _get_error_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    urls, *req = _get_error_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_error_params[1][0]
     responses.add(responses.Response(**rsps))
@@ -162,13 +163,14 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     assert str(rsps[&#39;status&#39;]) in caplog.text
 
 
+@pytest.mark.webtest
 def test_get(get_params, tmp_data_directory):
     &#34;&#34;&#34;Downloads and saves files from DERA.
     &#34;&#34;&#34;
 
-    dataset, dir, *args = get_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    dataset, *args = get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     get_DERA(dataset, tmpdir, *args)
     saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_params[1]]
@@ -213,9 +215,9 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get&#39;])
 def get_params(request):
 
-    dataset, dir, *args = request.param[&#39;args&#39;]
+    dataset, *args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    return (dataset, dir, *args), expected</code></pre>
+    return (dataset, *args), expected</code></pre>
 </details>
 </dd>
 <dt id="getgar.tests.test_client.test_get"><code class="name flex">
@@ -227,13 +229,14 @@ def get_params(request):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def test_get(get_params, tmp_data_directory):
+<pre><code class="python">@pytest.mark.webtest
+def test_get(get_params, tmp_data_directory):
     &#34;&#34;&#34;Downloads and saves files from DERA.
     &#34;&#34;&#34;
 
-    dataset, dir, *args = get_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    dataset, *args = get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     get_DERA(dataset, tmpdir, *args)
     saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_params[1]]
@@ -256,9 +259,9 @@ def get_params(request):
 def test_get_(_get_params, tmp_data_directory):
     &#34;&#34;&#34;Downloads and saves files from test urls.
     &#34;&#34;&#34;
-    urls, dir, *req = _get_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    urls, *req = _get_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_params[1]
     contents = [r[&#39;body&#39;] for r in rsps]
@@ -291,9 +294,9 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     &#34;&#34;&#34;Captures HTTPError and MaxRetryError exceptions.
     &#34;&#34;&#34;
 
-    urls, dir, *req = _get_error_params[0]
-    tmpdir = f&#39;{tmp_data_directory}/{dir}&#39;
-    os.mkdir(tmpdir)
+    urls, *req = _get_error_params[0]
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
 
     rsps = _get_error_params[1][0]
     responses.add(responses.Response(**rsps))

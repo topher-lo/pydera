@@ -118,7 +118,7 @@ def _get(urls: List[str],
          chunk_size: int = 128,
          timeout: int = 5,
          retry: int = 2,
-         delay: int = 1,
+         delay: int = 5,
          path_to_cert=PATH_TO_CERT) -&gt; None:
     &#34;&#34;&#34;Downloads the given URLs and saves the contents to dir.
 
@@ -131,7 +131,7 @@ def _get(urls: List[str],
 
         session (BaseUrlSession): 
             BaseUrlSession instance to use.
-        
+
         chunk_size (int): 
             Optional; chunk size for streaming files.
 
@@ -204,7 +204,7 @@ def get_DERA(dataset: str,
              start_date: str,
              end_date: str,
              chunk_size: int = 128,
-             timeout: int = 5,
+             timeout: int = 120,
              retry: int = 2,
              delay: int = 1) -&gt; None:
     &#34;&#34;&#34;Downloads and saves DERA dataset zipfiles for quarters between
@@ -309,7 +309,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="getgar.scrapper.client.get_DERA"><code class="name flex">
-<span>def <span class="ident">get_DERA</span></span>(<span>dataset: str, dir: str, start_date: str, end_date: str, chunk_size: int = 128, timeout: int = 5, retry: int = 2, delay: int = 1) ‑> NoneType</span>
+<span>def <span class="ident">get_DERA</span></span>(<span>dataset: str, dir: str, start_date: str, end_date: str, chunk_size: int = 128, timeout: int = 120, retry: int = 2, delay: int = 1) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Downloads and saves DERA dataset zipfiles for quarters between
@@ -365,7 +365,7 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
              start_date: str,
              end_date: str,
              chunk_size: int = 128,
-             timeout: int = 5,
+             timeout: int = 120,
              retry: int = 2,
              delay: int = 1) -&gt; None:
     &#34;&#34;&#34;Downloads and saves DERA dataset zipfiles for quarters between
