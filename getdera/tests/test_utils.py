@@ -3,13 +3,13 @@ import os
 import pytest
 import tempfile
 
-from getgar.utils import unzip
-from getgar.utils import make_path
+from getdera.utils import unzip
+from getdera.utils import make_path
 
 
 ### TESTCASES
 
-TEST_DATA_PATH = 'getgar/tests/data/'
+TEST_DATA_PATH = 'getdera/tests/data/'
 
 TESTCASES = {
     'unzip': [
@@ -51,7 +51,7 @@ def test_make_path(make_path_params):
 
     if not(test_path):
         tmpdir = tempfile.gettempdir()
-        path = f'{tmpdir}/getgar/tests/'
+        path = f'{tmpdir}/getdera/tests/'
         result = make_path(path)
     else:
         path = test_path

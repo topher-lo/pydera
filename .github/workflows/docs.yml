@@ -27,7 +27,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Build Docs
         run: |
-          pdoc3 --html --output-dir docs getgar
+          pdoc3 --html --output-dir docs getdera
       - name: Deploy Docs 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:

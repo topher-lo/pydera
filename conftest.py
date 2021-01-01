@@ -5,4 +5,4 @@ import pytest
 def tmp_data_directory(tmp_path_factory):
     """Creates temporary directory and returns its path.
     """
-    return str(tmp_path_factory.mktemp("getgar"))
+    return str(tmp_path_factory.mktemp("getdera"))

@@ -24,7 +24,7 @@ from datetime import date
 from tqdm import tqdm
 from typing import Dict
 
-from getgar.utils import unzip
+from getdera.utils import unzip
 
 
 def _process_tag(tmpdir: str) -> pd.DataFrame:

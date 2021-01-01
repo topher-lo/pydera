@@ -43,7 +43,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # Path to certificate
-PATH_TO_CERT = 'getgar/scrapper/certs/secgov.cer'
+PATH_TO_CERT = 'getdera/scrapper/certs/secgov.cer'
 
 ### Base URLs and paths to datasets
 ### Last Update: 7th November 2020
@@ -137,7 +137,7 @@ def _get(urls: List[str],
         # requests should incrementally backoff on common 5xx server errors
         # and 429 rate exceeded client error
         status_forcelist=[429, 500, 502, 503, 504],
-        # Only have GET requests in getgar
+        # Only have GET requests in getdera
         allowed_methods=['GET']
     )
     session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy,

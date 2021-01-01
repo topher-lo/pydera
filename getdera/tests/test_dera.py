@@ -2,15 +2,15 @@ import pytest
 
 import pandas as pd
 
-from getgar import utils
+from getdera import utils
 
 from pandas.testing import assert_frame_equal
-from getgar.dera import process
+from getdera.dera import process
 
 
 ### TESTCASES
 
-TEST_DATA_PATH = 'getgar/tests/data'
+TEST_DATA_PATH = 'getdera/tests/data'
 
 TESTCASES = {
     'process_tag': [
