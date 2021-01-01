@@ -1,5 +1,5 @@
 """
-The `utils` module contains the utility functions used in `getgar`.
+The `utils` module contains the utility functions used in `getdera`.
 """
 
 import os

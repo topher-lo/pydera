@@ -4,10 +4,10 @@ import responses
 import shutil
 
 from requests_toolbelt import sessions
-from getgar import utils
+from getdera import utils
 
-from getgar.scrapper.client import _get
-from getgar.scrapper.client import get_DERA
+from getdera.scrapper.client import _get
+from getdera.scrapper.client import get_DERA
 
 
 ### TESTCASES
