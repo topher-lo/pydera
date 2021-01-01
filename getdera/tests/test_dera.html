@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>getgar.tests.test_dera API documentation</title>
+<title>getdera.tests.test_dera API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>getgar.tests.test_dera</code></h1>
+<h1 class="title">Module <code>getdera.tests.test_dera</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -30,15 +30,15 @@
 
 import pandas as pd
 
-from getgar import utils
+from getdera import utils
 
 from pandas.testing import assert_frame_equal
-from getgar.dera import process
+from getdera.dera import process
 
 
 ### TESTCASES
 
-TEST_DATA_PATH = &#39;getgar/tests/data&#39;
+TEST_DATA_PATH = &#39;getdera/tests/data&#39;
 
 TESTCASES = {
     &#39;process_tag&#39;: [
@@ -157,7 +157,7 @@ def test_process(process_params):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="getgar.tests.test_dera.process_params"><code class="name flex">
+<dt id="getdera.tests.test_dera.process_params"><code class="name flex">
 <span>def <span class="ident">process_params</span></span>(<span>request, tmp_data_directory)</span>
 </code></dt>
 <dd>
@@ -175,7 +175,7 @@ def process_params(request, tmp_data_directory):
     return args, expected</code></pre>
 </details>
 </dd>
-<dt id="getgar.tests.test_dera.process_sub_params"><code class="name flex">
+<dt id="getdera.tests.test_dera.process_sub_params"><code class="name flex">
 <span>def <span class="ident">process_sub_params</span></span>(<span>request, tmp_data_directory)</span>
 </code></dt>
 <dd>
@@ -193,7 +193,7 @@ def process_sub_params(request, tmp_data_directory):
     return args, expected</code></pre>
 </details>
 </dd>
-<dt id="getgar.tests.test_dera.process_tag_params"><code class="name flex">
+<dt id="getdera.tests.test_dera.process_tag_params"><code class="name flex">
 <span>def <span class="ident">process_tag_params</span></span>(<span>request, tmp_data_directory)</span>
 </code></dt>
 <dd>
@@ -211,7 +211,7 @@ def process_tag_params(request, tmp_data_directory):
     return args, expected</code></pre>
 </details>
 </dd>
-<dt id="getgar.tests.test_dera.test_process"><code class="name flex">
+<dt id="getdera.tests.test_dera.test_process"><code class="name flex">
 <span>def <span class="ident">test_process</span></span>(<span>process_params)</span>
 </code></dt>
 <dd>
@@ -228,7 +228,7 @@ def process_tag_params(request, tmp_data_directory):
     assert_frame_equal(result, expected)</code></pre>
 </details>
 </dd>
-<dt id="getgar.tests.test_dera.test_process_sub"><code class="name flex">
+<dt id="getdera.tests.test_dera.test_process_sub"><code class="name flex">
 <span>def <span class="ident">test_process_sub</span></span>(<span>process_sub_params)</span>
 </code></dt>
 <dd>
@@ -243,7 +243,7 @@ def process_tag_params(request, tmp_data_directory):
     assert_frame_equal(result, expected)</code></pre>
 </details>
 </dd>
-<dt id="getgar.tests.test_dera.test_process_tag"><code class="name flex">
+<dt id="getdera.tests.test_dera.test_process_tag"><code class="name flex">
 <span>def <span class="ident">test_process_tag</span></span>(<span>process_tag_params)</span>
 </code></dt>
 <dd>
@@ -271,17 +271,17 @@ def process_tag_params(request, tmp_data_directory):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="getgar.tests" href="index.html">getgar.tests</a></code></li>
+<li><code><a title="getdera.tests" href="index.html">getdera.tests</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
-<li><code><a title="getgar.tests.test_dera.process_params" href="#getgar.tests.test_dera.process_params">process_params</a></code></li>
-<li><code><a title="getgar.tests.test_dera.process_sub_params" href="#getgar.tests.test_dera.process_sub_params">process_sub_params</a></code></li>
-<li><code><a title="getgar.tests.test_dera.process_tag_params" href="#getgar.tests.test_dera.process_tag_params">process_tag_params</a></code></li>
-<li><code><a title="getgar.tests.test_dera.test_process" href="#getgar.tests.test_dera.test_process">test_process</a></code></li>
-<li><code><a title="getgar.tests.test_dera.test_process_sub" href="#getgar.tests.test_dera.test_process_sub">test_process_sub</a></code></li>
-<li><code><a title="getgar.tests.test_dera.test_process_tag" href="#getgar.tests.test_dera.test_process_tag">test_process_tag</a></code></li>
+<li><code><a title="getdera.tests.test_dera.process_params" href="#getdera.tests.test_dera.process_params">process_params</a></code></li>
+<li><code><a title="getdera.tests.test_dera.process_sub_params" href="#getdera.tests.test_dera.process_sub_params">process_sub_params</a></code></li>
+<li><code><a title="getdera.tests.test_dera.process_tag_params" href="#getdera.tests.test_dera.process_tag_params">process_tag_params</a></code></li>
+<li><code><a title="getdera.tests.test_dera.test_process" href="#getdera.tests.test_dera.test_process">test_process</a></code></li>
+<li><code><a title="getdera.tests.test_dera.test_process_sub" href="#getdera.tests.test_dera.test_process_sub">test_process_sub</a></code></li>
+<li><code><a title="getdera.tests.test_dera.test_process_tag" href="#getdera.tests.test_dera.test_process_tag">test_process_tag</a></code></li>
 </ul>
 </li>
 </ul>

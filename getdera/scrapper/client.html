@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>getgar.scrapper.client API documentation</title>
+<title>getdera.scrapper.client API documentation</title>
 <meta name="description" content="The `client` module contains functions to webscape the
 SEC website and access the EDGAR API. Designed for parallelised
 webscrapping within the SEC …" />
@@ -21,7 +21,7 @@ webscrapping within the SEC …" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>getgar.scrapper.client</code></h1>
+<h1 class="title">Module <code>getdera.scrapper.client</code></h1>
 </header>
 <section id="section-intro">
 <p>The <code>client</code> module contains functions to webscape the
@@ -80,7 +80,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # Path to certificate
-PATH_TO_CERT = &#39;getgar/scrapper/certs/secgov.cer&#39;
+PATH_TO_CERT = &#39;getdera/scrapper/certs/secgov.cer&#39;
 
 ### Base URLs and paths to datasets
 ### Last Update: 7th November 2020
@@ -174,7 +174,7 @@ def _get(urls: List[str],
         # requests should incrementally backoff on common 5xx server errors
         # and 429 rate exceeded client error
         status_forcelist=[429, 500, 502, 503, 504],
-        # Only have GET requests in getgar
+        # Only have GET requests in getdera
         allowed_methods=[&#39;GET&#39;]
     )
     session.mount(&#39;https://&#39;, _TimeoutHTTPAdapter(max_retries=retry_strategy,
@@ -308,7 +308,7 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="getgar.scrapper.client.get_DERA"><code class="name flex">
+<dt id="getdera.scrapper.client.get_DERA"><code class="name flex">
 <span>def <span class="ident">get_DERA</span></span>(<span>dataset: str, dir: str, start_date: str, end_date: str, chunk_size: int = 128, timeout: int = 120, retry: int = 2, delay: int = 1) ‑> NoneType</span>
 </code></dt>
 <dd>
@@ -471,12 +471,12 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="getgar.scrapper" href="index.html">getgar.scrapper</a></code></li>
+<li><code><a title="getdera.scrapper" href="index.html">getdera.scrapper</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="getgar.scrapper.client.get_DERA" href="#getgar.scrapper.client.get_DERA">get_DERA</a></code></li>
+<li><code><a title="getdera.scrapper.client.get_DERA" href="#getdera.scrapper.client.get_DERA">get_DERA</a></code></li>
 </ul>
 </li>
 </ul>
