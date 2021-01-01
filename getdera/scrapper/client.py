@@ -1,6 +1,6 @@
 """
 The `client` module contains functions to webscape the
-SEC website and access the EDGAR API. Designed for parallelised
+SEC website. Designed for parallelised
 webscrapping within the SEC EDGAR's Fair Access policy.
 
 sec.gov certificate in `certs` directory is valid from 12/15/2020 to
