@@ -142,7 +142,7 @@ def _get(urls: List[str],
     )
     session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy,
                   timeout=timeout))
-    session.verify = False
+    session.verify = True
     for url in urls:
         try:
             r = session.get(url, stream=True)
