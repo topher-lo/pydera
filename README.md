@@ -62,9 +62,17 @@ There are packages to download company filings via the EDGAR API (e.g. `sec-edga
 
 The aggregated data from DERA is structured, cleaned, and provides columns of data (including financials and textual information) for all filings quarter by quarter. The datasets are also well documentated and contain fields (e.g. e city of the registrant's business address) relevant for data analysis. 
 
-In particular, I believe the `TXT` tables (from the mutual fund prospectus dataset and financial statements datasets) provide a large corpus of textual financial information. This corpus can be immediately usable for natural language processing (NLP) tasks. These tables are also panel data, which provides a time-dimension to NLP analysis.
+In particular, I believe the `TXT` tables (from the mutual fund prospectus dataset and financial statements datasets) provide a large corpus of textual financial information. This corpus can be immediately usable for natural language processing (NLP) tasks. These tables also present a time-dimension to NLP analysis.
+
+## To do
+- Complete example in `notebook/risk.ipynb`
 
 ## Roadmap
+- Build a metric of a mutual fund's "riskiness" to investors according to its:
+    - Objectives, risk narrative, and strategy narrative textual information
+    - Sharpe ratio
+    - Volatility
+- Present NLP analysis results in a Streamlit webapp
 - Build visualisation of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
