@@ -1,5 +1,9 @@
 # pydera
+[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![codecov](https://codecov.io/gh/topher-lo/pydera/branch/main/graph/badge.svg?token=MURPG4B3J0)](https://codecov.io/gh/topher-lo/pydera)
+[![Generic badge](https://img.shields.io/badge/version-v0.01-4B8BBE.svg)]()
+[![Open In nbviewer](https://warehouse-camo.ingress.cmh1.psfhosted.org/b76644f44625d8876b279659d108c1e5334fd8b3/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f76696577253230696e2d6e627669657765722d6f72616e6765)](https://nbviewer.jupyter.org/github/topher-lo/pydera)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/topher-lo/pydera)
 
 Dowloading aggregated textual data from the SEC's Division of Economic and Risk Analysis.
 
@@ -12,7 +16,8 @@ Dowloading aggregated textual data from the SEC's Division of Economic and Risk 
     - Financial Statement datasets
 - Processes tables within the datasets across multiple time periods
 - Example NLP pipelines (from data prep to data modelling and visualisation) using `pydera` and `Spacy` in Jupyter notebooks
-    - `notebook/risk.ipynb` -- Analysis of risk narratives in mutual fund prospectuses
+    - `notebook/risk.ipynb`: Analysis of risk narratives in mutual fund prospectuses
+- Documentation found ![here](https://topher-lo.github.io/pydera/getdera/)
 
 ## Install
 pydera depends on the following packages:
@@ -63,3 +68,7 @@ In particular, I believe the `TXT` tables (from the mutual fund prospectus datas
 - Build visualisation of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
+- Upload package to PyPi
+    
+## Contributing
+Found a bug? Wrote a patch? Have an idea on how to use DERA's datasets for a data science project? Please checkout the brief [contribution guide](https://github.com/topher-lo/pydera/blob/main/CONTRIBUTING.md). Any and all contributions are welcome. :heart: :snake: :raised_hands:
