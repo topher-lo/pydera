@@ -120,10 +120,10 @@ def process(dir: str,
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
 
         dtype (Dict[str, str]): 
-            Data type for data or columns.
+            Column name : dtype for data conversion
 
     Returns:
-        Processed tables inside DERA dataset zipfiles as a Pandas DataFrame.
+        Pandas DataFrame -- Processed tables inside DERA dataset zipfiles.
     """
 
     # Convert datetime string to %d-%m-$Y format
