@@ -1,4 +1,4 @@
-## How to contribute to PyEC333
+## How to contribute to pydera
 ### Did you find a bug?
 Please open up a Github issue with a title and description of the bug. A screenshot of the code and error message is also greatly appreciated.
 
