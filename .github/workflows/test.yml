@@ -6,8 +6,20 @@ name: Run Python tests
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'requirements.txt'
+      - '.gitattributes'
+      - '.gitignore'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'requirements.txt'
+      - '.gitattributes'
+      - '.gitignore'
 
 jobs:
   build:
