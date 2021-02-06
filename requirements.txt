@@ -10,4 +10,3 @@ responses
 spacy
 scikit-learn
 tqdm
-zipfile
