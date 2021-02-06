@@ -1,5 +1,4 @@
-"""
-The `utils` module contains the utility functions used in `getdera`.
+"""The `utils` module contains the helper functions used in `getdera`.
 """
 
 import os

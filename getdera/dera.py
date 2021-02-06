@@ -1,5 +1,4 @@
-"""
-The `dera` module contains functions to process structured datasets
+"""The `dera` module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.
 
 Supported datasets from DERA include:
@@ -42,7 +41,7 @@ def _process_tag(tmpdir: str) -> pd.DataFrame:
     found in tmpdir along index (axis=0). Removes duplicate tags.
 
     The TAG (Tags) table contains all standard taxonomy tags
-    (as of the date) and custom tags.
+    and custom tags found in the downloaded tables.
 
     Sets multindex with tag and version attributes.
 
