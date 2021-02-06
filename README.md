@@ -8,24 +8,24 @@
 Downloading aggregated datasets from the SEC's Division of Economic and Risk Analysis.
 
 ## Features
-- Webscrapes structured datasets from SEC DERA data library website (https://www.sec.gov/dera/data)
+- Webscrapes structured datasets from the DERA's data library (https://www.sec.gov/dera/data)
 - Bulk downloads quarterly structured datasets within a specified time period
 - Logging module that logs download status (e.g. HTTP status code) for each data set
 - Supported datasets and tables:
     - Mutual Fund Prospectus datasets
-    - Financial Statement datasets
+    - Financial Statements and Notes datasets
 - Processes tables within the datasets across multiple time periods
 - Example NLP pipelines (from data prep to data modelling and visualisation) using `pydera`, `spacy`, `gensim`, and `sklearn` in Jupyter notebooks
     - `notebook/risk.ipynb`: Topic modelling risk narratives from mutual fund prospectuses filed in 2019
 - Documentation found [here](https://topher-lo.github.io/pydera/getdera/).
 
 ## Limitations
-- For the "Financial Statements and Notes" datasets, pydera only supports downloads before 2021.
-- The SEC recently changed this dataset's timing of releases from every quarter to every month.
+- For the "Financial Statements and Notes" datasets, `pydera` only supports downloads before 2021.
+- Releases for this dataset was changed from every quarter to every month.
 - I will make a pull request in the near future to address this limitation.
 
 ## Install
-pydera depends on the following packages:
+`pydera` depends on the following packages:
 - `pandas`
 - `requests`
 - `requests-toolbelt`
@@ -75,7 +75,7 @@ There are packages to download company filings via the EDGAR API (e.g. `sec-edga
 
 `pydera` downloads from this library of aggregated datasets, which I believe are more suitable for data analysis.
 
-The aggregated data from DERA is structured, cleaned, and provides columns of data (including financials and textual information) for all filings quarter by quarter. The datasets are also well documentated and contain fields (e.g. e city of the registrant's business address) relevant for data analysis. 
+The aggregated data from DERA is structured, cleaned, and provides columns of data (including financials and textual information) for all filings quarter by quarter. The datasets are also well documented and contain fields (e.g. e city of the registrant's business address) relevant for data analysis. 
 
 In particular, I believe the `TXT` tables (from the mutual fund prospectus dataset and financial statements datasets) provide a large corpus of textual financial information. This corpus can be immediately usable for natural language processing (NLP) tasks. These tables also present a time-dimension to NLP analysis.
 
@@ -84,8 +84,8 @@ In particular, I believe the `TXT` tables (from the mutual fund prospectus datas
     - Objectives, risk narrative, and strategy narrative textual information
     - Sharpe ratio
     - Volatility
-- Matching mutual fund objectives, risk narratives, and strategy narratives to Q&A in an investor risk profiling questionaire (https://www.citibank.com.hk/english/investment/pdf/IRPQ_ICPQ_Eng.pdf)
-- Create streamlit webapp that matches an investor (according to their answers in a risk profiling questionaire) to an appropriate mutual fund)
+- Matching mutual fund objectives, risk narratives, and strategy narratives to Q&A in an investor risk profiling questionnaire (https://www.citibank.com.hk/english/investment/pdf/IRPQ_ICPQ_Eng.pdf)
+- Create streamlit webapp that matches an investor (according to their answers in a risk profiling questionnaire) to an appropriate mutual fund)
 - Build visualisation of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
