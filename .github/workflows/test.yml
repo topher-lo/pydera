@@ -12,6 +12,8 @@ on:
       - 'requirements.txt'
       - '.gitattributes'
       - '.gitignore'
+      - 'notebooks/**'
+
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -20,6 +22,7 @@ on:
       - 'requirements.txt'
       - '.gitattributes'
       - '.gitignore'
+      - 'notebooks/**'
 
 jobs:
   build:

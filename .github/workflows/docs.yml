@@ -9,6 +9,7 @@ on:
       - 'requirements.txt'
       - '.gitattributes'
       - '.gitignore'
+      - 'notebooks/**'
 
 jobs:
   build-docs:
