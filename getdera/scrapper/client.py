@@ -1,10 +1,12 @@
-"""
-The `client` module contains functions to webscape the
+"""The `client` module contains functions to webscape the
 SEC website. Designed for parallelised
 webscrapping within the SEC EDGAR's Fair Access policy.
 
-sec.gov certificate in `certs` directory is valid from 12/15/2020 to
-11/20/2021.
+Datasets are found at https://www.sec.gov/files/dera/data
+
+Paths to specific datasets:
+1. Financial Statements and Notes -- `financial-statement-and-notes-data-sets/zipfile`
+2. Mutual Fund Prospectuses -- `mutual-fund-prospectus-risk/return-summary-data-sets/zipfile`
 
 References:
 https://www.sec.gov/developer
@@ -50,8 +52,8 @@ PATH_TO_CERT = 'getdera/scrapper/certs/secgov.cer'
 
 DERA_DATA_URL = "https://www.sec.gov/files/dera/data"
 DERA_DATA_PATHS = {
+    'risk': 'mutual-fund-prospectus-risk/return-summary-data-sets/zipfile',
     'statements': 'financial-statement-and-notes-data-sets/zipfile',
-    'risk': 'mutual-fund-prospectus-risk/return-summary-data-sets/zipfile'
 }
 DERA_DATA_FILENAMES = {
     'statements': '%Yq%q_notes.zip',
