@@ -27,8 +27,10 @@ webscrapping within the SEC EDGAR&#39;s Fair Access policy …" />
 <p>The <code>client</code> module contains functions to webscape the
 SEC website. Designed for parallelised
 webscrapping within the SEC EDGAR's Fair Access policy.</p>
-<p>sec.gov certificate in <code>certs</code> directory is valid from 12/15/2020 to
-11/20/2021.</p>
+<p>Datasets are found at <a href="https://www.sec.gov/files/dera/data">https://www.sec.gov/files/dera/data</a></p>
+<p>Paths to specific datasets:
+1. Financial Statements and Notes &ndash; <code>financial-statement-and-notes-data-sets/zipfile</code>
+2. Mutual Fund Prospectuses &ndash; <code>mutual-fund-prospectus-risk/return-summary-data-sets/zipfile</code></p>
 <p>References:
 <a href="https://www.sec.gov/developer">https://www.sec.gov/developer</a></p>
 <details class="source">
@@ -40,8 +42,11 @@ The `client` module contains functions to webscape the
 SEC website. Designed for parallelised
 webscrapping within the SEC EDGAR&#39;s Fair Access policy.
 
-sec.gov certificate in `certs` directory is valid from 12/15/2020 to
-11/20/2021.
+Datasets are found at https://www.sec.gov/files/dera/data
+
+Paths to specific datasets:
+1. Financial Statements and Notes -- `financial-statement-and-notes-data-sets/zipfile`
+2. Mutual Fund Prospectuses -- `mutual-fund-prospectus-risk/return-summary-data-sets/zipfile`
 
 References:
 https://www.sec.gov/developer
@@ -87,8 +92,8 @@ PATH_TO_CERT = &#39;getdera/scrapper/certs/secgov.cer&#39;
 
 DERA_DATA_URL = &#34;https://www.sec.gov/files/dera/data&#34;
 DERA_DATA_PATHS = {
+    &#39;risk&#39;: &#39;mutual-fund-prospectus-risk/return-summary-data-sets/zipfile&#39;,
     &#39;statements&#39;: &#39;financial-statement-and-notes-data-sets/zipfile&#39;,
-    &#39;risk&#39;: &#39;mutual-fund-prospectus-risk/return-summary-data-sets/zipfile&#39;
 }
 DERA_DATA_FILENAMES = {
     &#39;statements&#39;: &#39;%Yq%q_notes.zip&#39;,
