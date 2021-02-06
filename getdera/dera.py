@@ -3,8 +3,16 @@ The `dera` module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.
 
 Supported datasets from DERA include:
-    - Mutual Fund Prospectus Risk and Return Summary
-    - Financial Statements and Notes
+1. Mutual Fund Prospectus Risk and Return Summary
+2. Financial Statements and Notes
+
+Links to supported datasets:
+1. https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
+2. https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html
+
+Links to documentation for supported datasets:
+1. https://www.sec.gov/dera/data/rr1.pdf
+2. https://www.sec.gov/files/aqfsn_1.pdf
 
 Note:
 Each dataset from DERA is a zipfile that contains multiple files in a
@@ -12,6 +20,8 @@ tabular format (e.g. tab-separated values file).
 Each file represents a different data table.
 
 You can find DERA datasets at https://www.sec.gov/dera/data
+
+You can find the SEC's standard taxonomies at https://www.sec.gov/info/edgar/edgartaxonomies.shtml
 """
 
 import os

@@ -15,9 +15,14 @@ Downloading aggregated datasets from the SEC's Division of Economic and Risk Ana
     - Mutual Fund Prospectus datasets
     - Financial Statement datasets
 - Processes tables within the datasets across multiple time periods
-- Example NLP pipelines (from data prep to data modelling and visualisation) using `pydera` and `Spacy` in Jupyter notebooks
-    - `notebook/risk.ipynb`: Analysis of risk narratives in mutual fund prospectuses
+- Example NLP pipelines (from data prep to data modelling and visualisation) using `pydera`, `spacy`, `gensim`, and `sklearn` in Jupyter notebooks
+    - `notebook/risk.ipynb`: Topic modelling risk narratives from mutual fund prospectuses filed in 2019
 - Documentation found [here](https://topher-lo.github.io/pydera/getdera/).
+
+## Limitations
+- For the "Financial Statements and Notes" datasets, pydera only supports downloads before 2021.
+- The SEC recently changed this dataset's timing of releases from every quarter to every month.
+- I will make a pull request in the near future to address this limitation.
 
 ## Install
 pydera depends on the following packages:
@@ -48,11 +53,21 @@ DATA = {} # Data dictionary
 
 with tempfile.TemporaryDirectory(dir=DIR) as tmpdir:
     # Download data and save in tempdir
-    client.get_DERA(DATASET, tmpdir, START_DATE, END_DATE)
+    client.get_DERA(DATASET,
+                    tmpdir,
+                    START_DATE,
+                    END_DATE)
     # Process SUB data in tempdir
-    DATA['sub'] = dera.process(tmpdir, 'sub', START_DATE, END_DATE)
+    DATA['sub'] = dera.process(tmpdir,
+                               'sub',
+                               START_DATE,
+                               END_DATE)
     # Process TXT data in tempdir
-    DATA['txt'] = dera.process(tmpdir, 'txt', START_DATE, END_DATE, dtype = {'document': str, 'txtlen': int})
+    DATA['txt'] = dera.process(tmpdir,
+                               'txt',
+                               START_DATE,
+                               END_DATE,
+                               dtype={'document': str, 'txtlen': int})
 ```
 
 ## Background
@@ -64,15 +79,13 @@ The aggregated data from DERA is structured, cleaned, and provides columns of da
 
 In particular, I believe the `TXT` tables (from the mutual fund prospectus dataset and financial statements datasets) provide a large corpus of textual financial information. This corpus can be immediately usable for natural language processing (NLP) tasks. These tables also present a time-dimension to NLP analysis.
 
-## To do
-- Complete example in `notebook/risk.ipynb`
-
 ## Roadmap
-- Build a metric of a mutual fund's "riskiness" to investors according to its:
+- Build a metric of a mutual fund's "riskiness" to an investor according to its:
     - Objectives, risk narrative, and strategy narrative textual information
     - Sharpe ratio
     - Volatility
-- Present NLP analysis results in a Streamlit webapp
+- Matching mutual fund objectives, risk narratives, and strategy narratives to Q&A in an investor risk profiling questionaire (https://www.citibank.com.hk/english/investment/pdf/IRPQ_ICPQ_Eng.pdf)
+- Create streamlit webapp that matches an investor (according to their answers in a risk profiling questionaire) to an appropriate mutual fund)
 - Build visualisation of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
