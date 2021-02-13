@@ -25,12 +25,19 @@ Downloading aggregated datasets from the SEC's Division of Economic and Risk Ana
 - I will make a pull request in the near future to address this limitation.
 
 ## Install
-pydera depends on the following packages:
+`pydera` depends on the following packages:
 - `pandas`
 - `requests`
 - `requests-toolbelt`
 - `responses`
 - `zipfile`
+
+To use `pydera`, you must first clone this repo and install its dependencies using `pip`.
+```
+git clone git@github.com:topher-lo/pydera.git
+cd [..path/to/repo]
+pip install -r requirements.txt
+```
 
 ## :rocket: A quick example
 ```python
