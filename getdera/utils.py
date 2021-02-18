@@ -2,11 +2,76 @@
 """
 
 import os
+import pandas as pd
+import dateutil.parser
 
+from datetime import date
 from zipfile import ZipFile
 
 from typing import Union
 from typing import List
+from typing import Tuple
+
+
+STRFTIME_FORMATS = {
+    'date': '%Y-%m-%d',
+    'year_quarter': '%Yq%q',
+    'year_month': '%Y_%m',
+}  # Striftime formats used in getdera
+
+
+def get_start_end_strftimes(
+        start_date: str,
+        end_date: str,
+        format: str = STRFTIME_FORMATS['date']) -> Tuple[str]:
+    """Returns start_date and end_date as formatted strings for internal use.
+    If end_date is not specified, returns end_date as current day's
+    formatted strftime.
+    """
+    # Convert datetime string to %d-%m-$Y format
+    start_date = dateutil.parser\
+                         .parse(start_date, dayfirst=True)\
+                         .strftime(format)
+    if not(end_date):
+        end_date = date.today().strftime(format)
+    else:
+        end_date = dateutil.parser\
+                           .parse(end_date, dayfirst=True)\
+                           .strftime(format)
+    return start_date, end_date
+
+
+def get_quarters(start_date: str,
+                 end_date: Union[None, str],
+                 format: str = STRFTIME_FORMATS['year_quarter']) -> List[str]:
+    """Returns list of quarters (as formatted strings) between start_end
+    and end_date. Uses quarter start frequency such that the list includes
+    end_date's quarter.
+    """
+    # Get list of quarters between start_date and end_date
+    quarters = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                             pd.to_datetime(end_date, dayfirst=True),
+                             freq='QS').to_period('Q')\
+                                       .strftime(format)\
+                                       .to_list()
+    return quarters
+
+
+def get_year_months(
+        start_date: str,
+        end_date: Union[None, str],
+        format: str = STRFTIME_FORMATS['year_month']) -> List[str]:
+    """Returns list of months (as formatted strings) between start_end
+    and end_date. Uses month start frequency such that the list
+    includes end_date's month.
+    """
+    # Get list of months by year between start_date and end_date
+    year_months = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                                pd.to_datetime(end_date, dayfirst=True),
+                                freq='MS').to_period('M')\
+                                          .strftime(format)\
+                                          .to_list()
+    return year_months
 
 
 def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -> None:
