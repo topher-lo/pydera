@@ -14,7 +14,7 @@ from typing import Tuple
 
 
 STRFTIME_FORMATS = {
-    'date': '%d-%m-%Y',
+    'date': '%Y-%m-%d',
     'year_quarter': '%Yq%q',
     'year_month': '%Y_%m',
 }  # Striftime formats used in getdera
@@ -28,16 +28,18 @@ def get_start_end_strftimes(
     If end_date is not specified, returns end_date as current day's
     formatted strftime.
     """
+    print(start_date, end_date)
     # Convert datetime string to %d-%m-$Y format
     start_date = dateutil.parser\
-                         .parse(start_date)\
+                         .parse(start_date, dayfirst=True)\
                          .strftime(format)
     if not(end_date):
         end_date = date.today().strftime(format)
     else:
         end_date = dateutil.parser\
-                           .parse(end_date)\
+                           .parse(end_date, dayfirst=True)\
                            .strftime(format)
+    print(start_date, end_date)
     return start_date, end_date
 
 
@@ -49,7 +51,8 @@ def get_quarters(start_date: str,
     end_date's quarter.
     """
     # Get list of quarters between start_date and end_date
-    quarters = pd.date_range(start_date, end_date,
+    quarters = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                             pd.to_datetime(end_date, dayfirst=True),
                              freq='QS').to_period('Q')\
                                        .strftime(format)\
                                        .to_list()
@@ -65,7 +68,8 @@ def get_year_months(
     includes end_date's month.
     """
     # Get list of months by year between start_date and end_date
-    year_months = pd.date_range(start_date, end_date,
+    year_months = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                                pd.to_datetime(end_date, dayfirst=True),
                                 freq='MS').to_period('M')\
                                           .strftime(format)\
                                           .to_list()

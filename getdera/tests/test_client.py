@@ -11,8 +11,7 @@ from getdera.scrapper.client import get_DERA
 
 
 # TESTCASES
-
-TEST_SESSION_URL = "https://www.testingsec.gov/files/dera/data/zipfile"
+TEST_SESSION_URL = "https://www.testingsec.gov/files/dera/data/dir"
 TEST_URL = "https://www.testingsec.gov/files/dera/data"
 DERA_URLS = {
     'statements': 'https://www.sec.gov/files/dera/data/financial-statement-and-notes-data-sets',

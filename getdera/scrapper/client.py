@@ -163,7 +163,8 @@ def _get(urls: List[str],
             continue
         else:
             base_url = session.base_url
-            logger.info(f'Successful access to url: {base_url}/{url}')
+            full_url = '{}/{}'.format(base_url[:base_url.rfind('/')], url)
+            logger.info(f'Successful access to url: {full_url}')
             path = f'{dir}/{url}'
             _save_content(path, r, chunk_size)
 
@@ -241,9 +242,9 @@ def get_DERA(dataset: str,
 
     # If statements dataset and end_date on or after 2020-10-01
     if dataset == 'statements' and\
-            datetime.strptime(end_date, '%d-%m-%Y') >= datetime(2020, 10, 1):
-        quarters_range = get_quarters(start_date, '01-09-2020')
-        months_range = get_year_months('01-10-2020', end_date)
+            datetime.strptime(end_date, '%Y-%m-%d') >= datetime(2020, 10, 1):
+        quarters_range = get_quarters(start_date, '2020-09-01')
+        months_range = get_year_months('2020-10-01', end_date)
         date_range = quarters_range + months_range
     else:
         # Get list of quarters between start_date and end_date
