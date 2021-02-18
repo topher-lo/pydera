@@ -110,9 +110,12 @@ TESTCASES = {
     ],
     'get_mock': [
         {'args': ('risk', '01-05-2020', '01-10-2020'),
-         'expected': [r for r in TEST_RESPONSES['200_risk']]},
+         'expected': ([r for r in TEST_RESPONSES['200_risk']],
+                      ['2020q2_rr1.zip', '2020q3_rr1.zip', '2020q4_rr1.zip'])},
         {'args': ('statements', '01-05-2020', '15-11-2020'),
-         'expected': [r for r in TEST_RESPONSES['200_statements']]},
+         'expected': ([r for r in TEST_RESPONSES['200_statements']],
+                      ['2020q2_notes.zip', '2020q3_notes.zip',
+                       '2020_10_notes.zip', '2020_11_notes.zip'])},
     ],
     'get_live': [
         {'args': ('risk', '01-05-2019', '15-12-2019'),
@@ -149,8 +152,9 @@ def _get_error_params(request):
 def get_mock_params(request):
 
     args = request.param['args']
-    rsps = request.param['expected']
-    return args, rsps
+    rsps = request.param['expected'][0]
+    file_names = request.param['expected'][1]
+    return args, rsps, file_names
 
 
 @pytest.fixture(scope='function', params=TESTCASES['get_live'])
@@ -229,7 +233,8 @@ def test_get_mock(get_mock_params, tmp_data_directory):
 
     get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
-    saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_mock_params[1]]
+    saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_mock_params[2]]
+    print([f for f in os.listdir(tmpdir)])
     shutil.rmtree(str(tmpdir))
     assert all(saved)
 

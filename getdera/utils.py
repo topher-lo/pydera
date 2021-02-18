@@ -14,7 +14,7 @@ from typing import Tuple
 
 
 STRFTIME_FORMATS = {
-    'date': '%Y-%m-%d',
+    'date': '%d-%m-%Y',
     'year_quarter': '%Yq%q',
     'year_month': '%Y_%m',
 }  # Striftime formats used in getdera

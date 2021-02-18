@@ -16,6 +16,7 @@ import os
 import logging
 import requests
 
+from datetime import datetime
 from typing import List
 
 from requests_toolbelt import sessions
@@ -191,7 +192,7 @@ def get_DERA(dataset: str,
         start_date (str): 
             Fetch all datasets after start_date.
             Includes start_date's quarter even if start_date is after the
-            start of the quarter.
+            start of the quarter. Cannot be in the same month as end_date.
 
             Date must be written in some ordered DateTime string format
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
@@ -200,7 +201,7 @@ def get_DERA(dataset: str,
             Optional; if end_date = None, feteches all datasets
             before today (UTC) and after start_end.
             (includes end_date's quarter even if end_date is before the
-            end of the quarter).
+            end of the quarter). Cannot be in the same month as start_date.
 
             Date must be written in some ordered DateTime string format
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
@@ -239,13 +240,18 @@ def get_DERA(dataset: str,
     start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
     # If statements dataset and end_date on or after 2020-10-01
-    if dataset == 'statements' and end_date >= '2020-10-01':
-        quarters_range = get_quarters(start_date, '2020-09-01')
-        months_range = get_year_months('2020-10-01', end_date)
+    if dataset == 'statements' and\
+            datetime.strptime(end_date, '%d-%m-%Y') >= datetime(2020, 10, 1):
+        quarters_range = get_quarters(start_date, '01-09-2020')
+        months_range = get_year_months('01-10-2020', end_date)
         date_range = quarters_range + months_range
     else:
         # Get list of quarters between start_date and end_date
         date_range = get_quarters(start_date, end_date)
+
+    # If no date range
+    if not(date_range):
+        raise ValueError('Improperly specified start and end dates.')
 
     # Create list of urls
     urls = [f'{date}{ext}' for date in date_range]

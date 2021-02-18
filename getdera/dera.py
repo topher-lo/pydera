@@ -164,7 +164,7 @@ def process(dir: str,
     ext = DERA_DATA_EXT[dataset]  # Dataset identifer and extension
     relevant_files = [f'{date}{ext}' for date in date_range]
     relevant_file_paths = [os.path.join(dir, f) for f in os.listdir(dir)
-                           if os.path.join(dir, f) in relevant_files]
+                           if f in relevant_files]
 
     # If no relevant files downloaded
     if not(relevant_file_paths):
@@ -174,7 +174,9 @@ def process(dir: str,
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
         # Unzip tables into tmp dir
-        for path in relevant_file_paths:
+        for i in range(len(relevant_files)):
+            path = relevant_file_paths[i]
+            f = relevant_files[i]
             unzip(f'{path}', f'{table}.tsv', tmpdir)
             dataset_name = f.split('.')[0]
             os.rename(f'{tmpdir}/{table}.tsv',
