@@ -7,7 +7,7 @@ from getdera.utils import unzip
 from getdera.utils import make_path
 
 
-### TESTCASES
+# TESTCASES
 
 TEST_DATA_PATH = 'getdera/tests/data/'
 
@@ -25,7 +25,7 @@ TESTCASES = {
 }
 
 
-### FIXTURES
+# FIXTURES
 
 @pytest.fixture(scope='function', params=TESTCASES['unzip'])
 def unzip_params(request):
@@ -40,7 +40,7 @@ def make_path_params(request):
     return args
 
 
-### UNIT TESTS
+# UNIT TESTS
 
 def test_make_path(make_path_params):
     """If directory path exists, returns path.
@@ -70,4 +70,3 @@ def test_unzip(unzip_params, tmp_data_directory):
     result = sorted(''.join([str(f) for f in os.listdir(tmpdir)]))
     expected = unzip_params[1]
     assert result == expected
-

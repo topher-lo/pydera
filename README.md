@@ -21,11 +21,6 @@ Downloading aggregated datasets from the SEC's Division of Economic and Risk Ana
     - `notebook/risk.ipynb`: Topic modelling risk narratives from mutual fund prospectuses filed in 2019
 - Documentation found [here](https://topher-lo.github.io/pydera/getdera/).
 
-## Limitations
-- For the "Financial Statements and Notes" datasets, `pydera` only supports downloads before 2021.
-- Releases for this dataset was changed from every quarter to every month.
-- I will make a pull request in the near future to address this limitation.
-
 ## Install
 `pydera` depends on the following packages:
 - `pandas`

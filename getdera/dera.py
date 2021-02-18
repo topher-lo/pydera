@@ -27,13 +27,19 @@ import os
 import pandas as pd
 import tempfile
 
-import dateutil.parser
-
-from datetime import date
 from tqdm import tqdm
 from typing import Dict
 
 from getdera.utils import unzip
+from getdera.utils import get_start_end_strftimes
+from getdera.utils import get_quarters
+from getdera.utils import get_year_months
+
+
+DERA_DATA_EXT = {
+    'risk': '_rr1.zip',
+    'statements': '_notes.zip',
+}  # DERA dataset identifier and extension
 
 
 def _process_tag(tmpdir: str) -> pd.DataFrame:
@@ -86,6 +92,7 @@ def _process_txt(tmpdir: str, dtype: Dict[str, str] = None) -> pd.DataFrame:
 
 
 def process(dir: str,
+            dataset: str,
             table: str,
             start_date: str,
             end_date: str = None,
@@ -96,6 +103,12 @@ def process(dir: str,
     Args:
         dir (str): 
             Path to directory containg DERA datasets as zipfiles.
+
+        dataset (str): 
+            DERA dataset to process.
+            Supported datasets include:
+                - 'statements': Financial Statements and Notes
+                - 'risk': Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -135,40 +148,44 @@ def process(dir: str,
         Pandas DataFrame -- Processed tables inside DERA dataset zipfiles.
     """
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime('%d-%m-%Y')
-    if not(end_date):
-        end_date = date.today().strftime('%d-%m-%Y')
-    else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime('%d-%m-%Y')
-    end_date = end_date
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq='Q').to_period('Q')\
-                                        .strftime('%Yq%q')\
-                                        .to_list()
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == 'statements' and end_date >= '2020-10-01':
+        quarters_range = get_quarters(start_date, '2020-09-01')
+        months_range = get_year_months('2020-10-01', end_date)
+        date_range = quarters_range + months_range
+    else:
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
+
+    # Get list of relevant file names
+    ext = DERA_DATA_EXT[dataset]  # Dataset identifer and extension
+    relevant_files = [f'{date}{ext}' for date in date_range]
+    relevant_file_paths = [os.path.join(dir, f) for f in os.listdir(dir)
+                           if f in relevant_files]
+
+    # If no relevant files downloaded
+    if not(relevant_file_paths):
+        raise FileNotFoundError('No downloaded DERA datasets between '
+                                'start date and end date.')
 
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
         # Unzip tables into tmp dir
-        for f in os.listdir(dir):
-            path = os.path.join(dir, f)
-            if any(q in path for q in date_range):
-                unzip(f'{path}', f'{table}.tsv', tmpdir)
-                dataset_name = f.split('.')[0]
-                os.rename(f'{tmpdir}/{table}.tsv',
-                          f'{tmpdir}/{dataset_name}_{table}.tsv')
-        
+        for i in range(len(relevant_files)):
+            path = relevant_file_paths[i]
+            f = relevant_files[i]
+            unzip(f'{path}', f'{table}.tsv', tmpdir)
+            dataset_name = f.split('.')[0]
+            os.rename(f'{tmpdir}/{table}.tsv',
+                      f'{tmpdir}/{dataset_name}_{table}.tsv')
+
         # Process specified table
         if table == 'tag':
             data = _process_tag(tmpdir)
-        
+
         elif table == 'sub':
             data = _process_sub(tmpdir, dtype)
 
