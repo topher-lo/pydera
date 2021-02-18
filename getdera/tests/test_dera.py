@@ -15,6 +15,7 @@ TEST_DATA_PATH = 'getdera/tests/data'
 TESTCASES = {
     'process_tag': [
         {'args': (f'{TEST_DATA_PATH}',
+                  'risk',
                   'tag',
                   '01-01-2020'),
          'expected': pd.DataFrame({
@@ -36,6 +37,7 @@ TESTCASES = {
     ],
     'process_sub': [
         {'args': (f'{TEST_DATA_PATH}',
+                  'risk',
                   'sub',
                   '01-10-2019',
                   '15-12-2019'),
@@ -49,6 +51,7 @@ TESTCASES = {
     ],
     'process': [
         {'args': (f'{TEST_DATA_PATH}',
+                  'risk',
                   'txt',
                   '01-07-2019',
                   '15-12-2019'),
@@ -59,6 +62,7 @@ TESTCASES = {
              'dummy_val': ['lorem2019q3', None, 'ipsum2019q3',
                            'lorem2019q4', None, 'ipsum2019q4']})},
         {'args': (f'{TEST_DATA_PATH}',
+                  'risk',
                   'txt',
                   '01-10-2019',
                   '15-01-2020'),
@@ -71,7 +75,7 @@ TESTCASES = {
     ],
 }
 
-### FIXTURES
+# FIXTURES
 
 @pytest.fixture(scope='function', params=TESTCASES['process_tag'])
 def process_tag_params(request, tmp_data_directory):
@@ -100,7 +104,7 @@ def process_params(request, tmp_data_directory):
     return args, expected
 
 
-### UNIT TESTS
+# UNIT TESTS
 
 def test_process_tag(process_tag_params):
     result = process(*process_tag_params[0])

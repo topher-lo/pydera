@@ -16,20 +16,19 @@ import os
 import logging
 import requests
 
-import dateutil.parser
-import pandas as pd
-
 from typing import List
 
-from datetime import date
 from requests_toolbelt import sessions
 from requests.adapters import HTTPAdapter
 from urllib3.exceptions import MaxRetryError
+from getdera.utils import get_start_end_strftimes
+from getdera.utils import get_quarters
+from getdera.utils import get_year_months
 
 from requests.packages.urllib3.util.retry import Retry
 
 
-### Logging
+# Logging
 logger = logging.getLogger(__name__)  
 
 # Set log level
@@ -47,21 +46,25 @@ logger.addHandler(file_handler)
 # Path to certificate
 PATH_TO_CERT = 'getdera/scrapper/certs/secgov.cer'
 
-### Base URLs and paths to datasets
-### Last Update: 7th November 2020
+# Base URLs and paths to datasets
+# Last Update: 7th November 2020
 
 DERA_DATA_URL = "https://www.sec.gov/files/dera/data"
 DERA_DATA_PATHS = {
     'risk': 'mutual-fund-prospectus-risk/return-summary-data-sets/zipfile',
     'statements': 'financial-statement-and-notes-data-sets/zipfile',
 }
-DERA_DATA_FILENAMES = {
-    'statements': '%Yq%q_notes.zip',
-    'risk': '%Yq%q_rr1.zip'
-}
+DERA_DATA_EXT = {
+    'risk': '_rr1.zip',
+    'statements': '_notes.zip',
+}  # DERA dataset identifier and extension
 
 
-### CLIENT
+# CLIENT
+
+def _response_raise_status(response, *args, **kwargs):
+    return response.raise_for_status()
+
 
 class _TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, *args, **kwargs):
@@ -144,7 +147,7 @@ def _get(urls: List[str],
     )
     session.mount('https://', _TimeoutHTTPAdapter(max_retries=retry_strategy,
                   timeout=timeout))
-    session.verify = True
+    session.verify = True  # Verify session
     for url in urls:
         try:
             r = session.get(url, stream=True)
@@ -227,35 +230,25 @@ def get_DERA(dataset: str,
     # SET-UP
     endpoint = DERA_DATA_PATHS[dataset]
     dera_http = sessions.BaseUrlSession(base_url=f'{DERA_DATA_URL}/{endpoint}')
-    assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
+    assert_status_hook = _response_raise_status
     dera_http.hooks["response"] = [assert_status_hook]
+    # Dataset identifier and extension
+    ext = DERA_DATA_EXT[dataset]
 
-    filename_format = DERA_DATA_FILENAMES[dataset]
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime('%d-%m-%Y')
-    if not(end_date):
-        end_date = date.today().strftime('%d-%m-%Y')
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == 'statements' and end_date >= '2020-10-01':
+        quarters_range = get_quarters(start_date, '2020-09-01')
+        months_range = get_year_months('2020-10-01', end_date)
+        date_range = quarters_range + months_range
     else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime('%d-%m-%Y')
-    end_date = end_date
-
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq='Q').to_period('Q')\
-                                        .strftime('%Yq%q')\
-                                        .to_list()
-
-    filename_ext = '_' + filename_format.split('_')[1]
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
 
     # Create list of urls
-    urls = [f'{q}{filename_ext}' for q in date_range]
-
+    urls = [f'{date}{ext}' for date in date_range]
     # GET and save datasets in dir
     _get(urls, dir, dera_http, chunk_size, timeout, retry, delay)
 
