@@ -232,24 +232,23 @@ def test_get_mock(get_mock_params, tmp_data_directory):
     get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
     saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_mock_params[2]]
-    print([f for f in os.listdir(tmpdir)])
     shutil.rmtree(str(tmpdir))
     assert all(saved)
 
 
 @pytest.mark.webtest
-def test_get_live(get_params, tmp_data_directory):
+def test_get_live(get_live_params, tmp_data_directory):
     """(Live test) Downloads and saves every relevant DERA dataset
     between start_date and end_date.
     """
 
-    dataset, *args = get_params[0]
+    dataset, *args = get_live_params[0]
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
 
     get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
-    saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_params[1]]
+    saved = [os.path.isfile(f'{tmpdir}/{f}') for f in get_live_params[1]]
     shutil.rmtree(str(tmpdir))
     assert all(saved)
 
