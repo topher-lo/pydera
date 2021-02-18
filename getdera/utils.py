@@ -28,7 +28,6 @@ def get_start_end_strftimes(
     If end_date is not specified, returns end_date as current day's
     formatted strftime.
     """
-    print(start_date, end_date)
     # Convert datetime string to %d-%m-$Y format
     start_date = dateutil.parser\
                          .parse(start_date, dayfirst=True)\
@@ -39,7 +38,6 @@ def get_start_end_strftimes(
         end_date = dateutil.parser\
                            .parse(end_date, dayfirst=True)\
                            .strftime(format)
-    print(start_date, end_date)
     return start_date, end_date
 
 

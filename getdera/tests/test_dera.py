@@ -17,7 +17,8 @@ TESTCASES = {
         {'args': (f'{TEST_DATA_PATH}',
                   'risk',
                   'tag',
-                  '01-01-2020'),
+                  '01-01-2020',
+                  '01-03-2020'),
          'expected': pd.DataFrame({
              'tag': ['AcquiredFundFeesAndExpensesBasedOnEstimates',
                      'AmendmentFlag',
