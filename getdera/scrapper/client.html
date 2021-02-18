@@ -55,20 +55,20 @@ import os
 import logging
 import requests
 
-import dateutil.parser
-import pandas as pd
-
+from datetime import datetime
 from typing import List
 
-from datetime import date
 from requests_toolbelt import sessions
 from requests.adapters import HTTPAdapter
 from urllib3.exceptions import MaxRetryError
+from getdera.utils import get_start_end_strftimes
+from getdera.utils import get_quarters
+from getdera.utils import get_year_months
 
 from requests.packages.urllib3.util.retry import Retry
 
 
-### Logging
+# Logging
 logger = logging.getLogger(__name__)  
 
 # Set log level
@@ -86,21 +86,25 @@ logger.addHandler(file_handler)
 # Path to certificate
 PATH_TO_CERT = &#39;getdera/scrapper/certs/secgov.cer&#39;
 
-### Base URLs and paths to datasets
-### Last Update: 7th November 2020
+# Base URLs and paths to datasets
+# Last Update: 7th November 2020
 
 DERA_DATA_URL = &#34;https://www.sec.gov/files/dera/data&#34;
 DERA_DATA_PATHS = {
     &#39;risk&#39;: &#39;mutual-fund-prospectus-risk/return-summary-data-sets/zipfile&#39;,
     &#39;statements&#39;: &#39;financial-statement-and-notes-data-sets/zipfile&#39;,
 }
-DERA_DATA_FILENAMES = {
-    &#39;statements&#39;: &#39;%Yq%q_notes.zip&#39;,
-    &#39;risk&#39;: &#39;%Yq%q_rr1.zip&#39;
-}
+DERA_DATA_EXT = {
+    &#39;risk&#39;: &#39;_rr1.zip&#39;,
+    &#39;statements&#39;: &#39;_notes.zip&#39;,
+}  # DERA dataset identifier and extension
 
 
-### CLIENT
+# CLIENT
+
+def _response_raise_status(response, *args, **kwargs):
+    return response.raise_for_status()
+
 
 class _TimeoutHTTPAdapter(HTTPAdapter):
     def __init__(self, *args, **kwargs):
@@ -183,7 +187,7 @@ def _get(urls: List[str],
     )
     session.mount(&#39;https://&#39;, _TimeoutHTTPAdapter(max_retries=retry_strategy,
                   timeout=timeout))
-    session.verify = True
+    session.verify = True  # Verify session
     for url in urls:
         try:
             r = session.get(url, stream=True)
@@ -198,7 +202,8 @@ def _get(urls: List[str],
             continue
         else:
             base_url = session.base_url
-            logger.info(f&#39;Successful access to url: {base_url}/{url}&#39;)
+            full_url = &#39;{}/{}&#39;.format(base_url[:base_url.rfind(&#39;/&#39;)], url)
+            logger.info(f&#39;Successful access to url: {full_url}&#39;)
             path = f&#39;{dir}/{url}&#39;
             _save_content(path, r, chunk_size)
 
@@ -227,7 +232,7 @@ def get_DERA(dataset: str,
         start_date (str): 
             Fetch all datasets after start_date.
             Includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter.
+            start of the quarter. Cannot be in the same month as end_date.
 
             Date must be written in some ordered DateTime string format
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
@@ -236,7 +241,7 @@ def get_DERA(dataset: str,
             Optional; if end_date = None, feteches all datasets
             before today (UTC) and after start_end.
             (includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter).
+            end of the quarter). Cannot be in the same month as start_date.
 
             Date must be written in some ordered DateTime string format
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
@@ -266,35 +271,30 @@ def get_DERA(dataset: str,
     # SET-UP
     endpoint = DERA_DATA_PATHS[dataset]
     dera_http = sessions.BaseUrlSession(base_url=f&#39;{DERA_DATA_URL}/{endpoint}&#39;)
-    assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
+    assert_status_hook = _response_raise_status
     dera_http.hooks[&#34;response&#34;] = [assert_status_hook]
+    # Dataset identifier and extension
+    ext = DERA_DATA_EXT[dataset]
 
-    filename_format = DERA_DATA_FILENAMES[dataset]
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime(&#39;%d-%m-%Y&#39;)
-    if not(end_date):
-        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == &#39;statements&#39; and\
+            datetime.strptime(end_date, &#39;%Y-%m-%d&#39;) &gt;= datetime(2020, 10, 1):
+        quarters_range = get_quarters(start_date, &#39;2020-09-01&#39;)
+        months_range = get_year_months(&#39;2020-10-01&#39;, end_date)
+        date_range = quarters_range + months_range
     else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime(&#39;%d-%m-%Y&#39;)
-    end_date = end_date
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
 
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
-                                        .strftime(&#39;%Yq%q&#39;)\
-                                        .to_list()
-
-    filename_ext = &#39;_&#39; + filename_format.split(&#39;_&#39;)[1]
+    # If no date range
+    if not(date_range):
+        raise ValueError(&#39;Improperly specified start and end dates.&#39;)
 
     # Create list of urls
-    urls = [f&#39;{q}{filename_ext}&#39; for q in date_range]
-
+    urls = [f&#39;{date}{ext}&#39; for date in date_range]
     # GET and save datasets in dir
     _get(urls, dir, dera_http, chunk_size, timeout, retry, delay)
 
@@ -331,7 +331,7 @@ Supported datasets include:
 <dd>
 <p>Fetch all datasets after start_date.
 Includes start_date's quarter even if start_date is after the
-start of the quarter.</p>
+start of the quarter. Cannot be in the same month as end_date.</p>
 <p>Date must be written in some ordered DateTime string format
 (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)</p>
 </dd>
@@ -340,7 +340,7 @@ start of the quarter.</p>
 <p>Optional; if end_date = None, feteches all datasets
 before today (UTC) and after start_end.
 (includes end_date's quarter even if end_date is before the
-end of the quarter).</p>
+end of the quarter). Cannot be in the same month as start_date.</p>
 <p>Date must be written in some ordered DateTime string format
 e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD</p>
 </dd>
@@ -388,7 +388,7 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
         start_date (str): 
             Fetch all datasets after start_date.
             Includes start_date&#39;s quarter even if start_date is after the
-            start of the quarter.
+            start of the quarter. Cannot be in the same month as end_date.
 
             Date must be written in some ordered DateTime string format
             (e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD)
@@ -397,7 +397,7 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
             Optional; if end_date = None, feteches all datasets
             before today (UTC) and after start_end.
             (includes end_date&#39;s quarter even if end_date is before the
-            end of the quarter).
+            end of the quarter). Cannot be in the same month as start_date.
 
             Date must be written in some ordered DateTime string format
             e.g. DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD
@@ -427,35 +427,30 @@ sleep seconds = delay * (2 ** ({number of total retries} - 1)).</dd>
     # SET-UP
     endpoint = DERA_DATA_PATHS[dataset]
     dera_http = sessions.BaseUrlSession(base_url=f&#39;{DERA_DATA_URL}/{endpoint}&#39;)
-    assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
+    assert_status_hook = _response_raise_status
     dera_http.hooks[&#34;response&#34;] = [assert_status_hook]
+    # Dataset identifier and extension
+    ext = DERA_DATA_EXT[dataset]
 
-    filename_format = DERA_DATA_FILENAMES[dataset]
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime(&#39;%d-%m-%Y&#39;)
-    if not(end_date):
-        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == &#39;statements&#39; and\
+            datetime.strptime(end_date, &#39;%Y-%m-%d&#39;) &gt;= datetime(2020, 10, 1):
+        quarters_range = get_quarters(start_date, &#39;2020-09-01&#39;)
+        months_range = get_year_months(&#39;2020-10-01&#39;, end_date)
+        date_range = quarters_range + months_range
     else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime(&#39;%d-%m-%Y&#39;)
-    end_date = end_date
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
 
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
-                                        .strftime(&#39;%Yq%q&#39;)\
-                                        .to_list()
-
-    filename_ext = &#39;_&#39; + filename_format.split(&#39;_&#39;)[1]
+    # If no date range
+    if not(date_range):
+        raise ValueError(&#39;Improperly specified start and end dates.&#39;)
 
     # Create list of urls
-    urls = [f&#39;{q}{filename_ext}&#39; for q in date_range]
-
+    urls = [f&#39;{date}{ext}&#39; for date in date_range]
     # GET and save datasets in dir
     _get(urls, dir, dera_http, chunk_size, timeout, retry, delay)
 

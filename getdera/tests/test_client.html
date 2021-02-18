@@ -38,15 +38,16 @@ from getdera.scrapper.client import _get
 from getdera.scrapper.client import get_DERA
 
 
-### TESTCASES
-
-BASE_URL = &#34;https://www.testingsec.gov/dera/data&#34;
-TEST_ENDPOINT = &#34;testing-data-sets&#34;
-TEST_SESSION_URL = f&#39;{BASE_URL}/{TEST_ENDPOINT}/zipfile&#39;
-TEST_URL = f&#39;{BASE_URL}/{TEST_ENDPOINT}&#39;
+# TESTCASES
+TEST_SESSION_URL = &#34;https://www.testingsec.gov/files/dera/data/dir&#34;
+TEST_URL = &#34;https://www.testingsec.gov/files/dera/data&#34;
+DERA_URLS = {
+    &#39;statements&#39;: &#39;https://www.sec.gov/files/dera/data/financial-statement-and-notes-data-sets&#39;,
+    &#39;risk&#39;: &#39;https://www.sec.gov/files/dera/data/mutual-fund-prospectus-risk/return-summary-data-sets&#39;
+}
 
 # SESSION SET-UP
-test_http = sessions.BaseUrlSession(base_url=f&#39;{TEST_SESSION_URL}&#39;)
+test_http = sessions.BaseUrlSession(base_url=TEST_SESSION_URL)
 assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
 test_http.hooks[&#34;response&#34;] = [assert_status_hook]
 
@@ -54,7 +55,7 @@ CONTENT = [&#39;1&#39;*3,
            &#39;2&#39;*6,
            &#39;3&#39;*13]
 
-RESPONSES = {
+TEST_RESPONSES = {
     &#39;200&#39;: [
         {&#39;url&#39;: f&#39;{TEST_URL}/2019q1_rr1.zip&#39;,
          &#39;method&#39;: &#39;GET&#39;,
@@ -67,72 +68,147 @@ RESPONSES = {
         {&#39;url&#39;: f&#39;{TEST_URL}/2019q3_rr1.zip&#39;,
          &#39;method&#39;: &#39;GET&#39;,
          &#39;body&#39;: CONTENT[2],
-         &#39;status&#39;: 200}, 
+         &#39;status&#39;: 200},
     ],
-    &#39;403&#39;: {&#39;url&#39;: f&#39;{TEST_URL}/2019q1_rr1.zip&#39;,
-            &#39;method&#39;: &#39;GET&#39;,
-            &#39;status&#39;: 403},
-    &#39;500&#39;: {&#39;url&#39;: f&#39;{TEST_URL}/2019q2_rr2.zip&#39;,
-            &#39;method&#39;: &#39;GET&#39;,
-            &#39;status&#39;: 500},
+    &#39;403&#39;: [{&#39;url&#39;: f&#39;{TEST_URL}/2019q1_rr1.zip&#39;,
+             &#39;method&#39;: &#39;GET&#39;,
+             &#39;status&#39;: 403}],
+    &#39;500&#39;: [{&#39;url&#39;: f&#39;{TEST_URL}/2019q2_rr1.zip&#39;,
+             &#39;method&#39;: &#39;GET&#39;,
+             &#39;status&#39;: 500}],
+    &#39;200_risk&#39;: [
+        {&#39;url&#39;: &#39;{}/2020q2_rr1.zip&#39;.format(DERA_URLS[&#39;risk&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+        {&#39;url&#39;: &#39;{}/2020q3_rr1.zip&#39;.format(DERA_URLS[&#39;risk&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+        {&#39;url&#39;: &#39;{}/2020q4_rr1.zip&#39;.format(DERA_URLS[&#39;risk&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+    ],
+    &#39;200_statements&#39;: [
+        {&#39;url&#39;: &#39;{}/2020q2_notes.zip&#39;.format(DERA_URLS[&#39;statements&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+        {&#39;url&#39;: &#39;{}/2020q3_notes.zip&#39;.format(DERA_URLS[&#39;statements&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+        {&#39;url&#39;: &#39;{}/2020_10_notes.zip&#39;.format(DERA_URLS[&#39;statements&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+        {&#39;url&#39;: &#39;{}/2020_11_notes.zip&#39;.format(DERA_URLS[&#39;statements&#39;]),
+         &#39;method&#39;: &#39;GET&#39;,
+         &#39;status&#39;: 200},
+    ]
 }
 
 TESTCASES = {
     &#39;_get&#39;: [
-        {&#39;args&#39;: ([r for r in RESPONSES[&#39;200&#39;]], test_http, 3, 1, 2, 1)},
+        {&#39;kwargs&#39;: {&#39;urls&#39;: [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r
+                             in TEST_RESPONSES[&#39;200&#39;]],
+                    &#39;dir&#39;: &#39;TEMPORARY&#39;,
+                    &#39;session&#39;: test_http,
+                    &#39;chunk_size&#39;: 3,
+                    &#39;timeout&#39;: 1,
+                    &#39;retry&#39;: 2,
+                    &#39;delay&#39;: 1},
+         &#39;expected&#39;: [r for r in TEST_RESPONSES[&#39;200&#39;]]},
     ],
     &#39;_get_error&#39;: [
-        {&#39;args&#39;: ([RESPONSES[&#39;403&#39;]], test_http, 3, 1, 2, 1)},
-        {&#39;args&#39;: ([RESPONSES[&#39;500&#39;]], test_http, 3, 1, 2, 1)}
+        {&#39;kwargs&#39;: {&#39;urls&#39;: [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r
+                             in TEST_RESPONSES[&#39;403&#39;]],
+                    &#39;dir&#39;: &#39;TEMPORARY&#39;,
+                    &#39;session&#39;: test_http,
+                    &#39;chunk_size&#39;: 3,
+                    &#39;timeout&#39;: 1,
+                    &#39;retry&#39;: 2,
+                    &#39;delay&#39;: 1},
+         &#39;expected&#39;: [r for r in TEST_RESPONSES[&#39;403&#39;]]},
+        {&#39;kwargs&#39;: {&#39;urls&#39;: [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r
+                             in TEST_RESPONSES[&#39;500&#39;]],
+                    &#39;dir&#39;: &#39;TEMPORARY&#39;,
+                    &#39;session&#39;: test_http,
+                    &#39;chunk_size&#39;: 3,
+                    &#39;timeout&#39;: 1,
+                    &#39;retry&#39;: 2,
+                    &#39;delay&#39;: 1},
+         &#39;expected&#39;: [r for r in TEST_RESPONSES[&#39;500&#39;]]},
     ],
-    &#39;get&#39;: [
+    &#39;get_mock&#39;: [
+        {&#39;args&#39;: (&#39;risk&#39;, &#39;31-03-2020&#39;, &#39;01-10-2020&#39;),
+         &#39;expected&#39;: ([r for r in TEST_RESPONSES[&#39;200_risk&#39;]],
+                      [&#39;2020q2_rr1.zip&#39;, &#39;2020q3_rr1.zip&#39;, &#39;2020q4_rr1.zip&#39;])},
+        {&#39;args&#39;: (&#39;statements&#39;, &#39;31-03-2020&#39;, &#39;15-11-2020&#39;),
+         &#39;expected&#39;: ([r for r in TEST_RESPONSES[&#39;200_statements&#39;]],
+                      [&#39;2020q2_notes.zip&#39;, &#39;2020q3_notes.zip&#39;,
+                       &#39;2020_10_notes.zip&#39;, &#39;2020_11_notes.zip&#39;])},
+    ],
+    &#39;get_live&#39;: [
         {&#39;args&#39;: (&#39;risk&#39;, &#39;01-05-2019&#39;, &#39;15-12-2019&#39;),
-         &#39;expected&#39;: [&#39;2019q2_rr1.zip&#39;, &#39;2019q3_rr1.zip&#39;]}
-    ]
+         &#39;expected&#39;: [&#39;2019q3_rr1.zip&#39;, &#39;2019q4_rr1.zip&#39;]},
+    ],
 }
 
 
-### FIXTURES
+# FIXTURES
+
+def register_mock_responses(mocks):
+    for r in mocks:
+        responses.add(responses.Response(**r))
+
 
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;_get&#39;])
 def _get_params(request):
 
-    rsps, *args = request.param[&#39;args&#39;]
-    urls = [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r in rsps]
-    return (urls, *args), rsps
+    kwargs = request.param[&#39;kwargs&#39;]
+    rsps = request.param[&#39;expected&#39;]
+    return kwargs, rsps
 
 
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;_get_error&#39;])
 def _get_error_params(request):
 
-    rsps, *args = request.param[&#39;args&#39;]
-    urls = [r[&#39;url&#39;].split(&#39;/&#39;)[-1] for r in rsps]
-    return (urls, *args), rsps
+    kwargs = request.param[&#39;kwargs&#39;]
+    rsps = request.param[&#39;expected&#39;]
+    return kwargs, rsps
 
 
-@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get&#39;])
-def get_params(request):
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get_mock&#39;])
+def get_mock_params(request):
 
-    dataset, *args = request.param[&#39;args&#39;]
+    args = request.param[&#39;args&#39;]
+    rsps = request.param[&#39;expected&#39;][0]
+    file_names = request.param[&#39;expected&#39;][1]
+    return args, rsps, file_names
+
+
+@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get_live&#39;])
+def get_live_params(request):
+
+    args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    return (dataset, *args), expected
+    return args, expected
 
 
-### UNIT TESTS
+# UNIT TESTS
 
 @responses.activate
 def test_get_(_get_params, tmp_data_directory):
-    &#34;&#34;&#34;Downloads and saves files from test urls.
+    &#34;&#34;&#34;Downloads and saves body content from test urls.
     &#34;&#34;&#34;
-    urls, *req = _get_params[0]
+
+    kwargs = _get_params[0]
+    # Create tmpdir and set in kwargs
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
+    kwargs[&#39;dir&#39;] = tmpdir
 
+    # Mock responses content
     rsps = _get_params[1]
     contents = [r[&#39;body&#39;] for r in rsps]
-    for r in rsps:
-        responses.add(responses.Response(**r))
-    _get(urls, tmpdir, *req)
+    register_mock_responses(rsps)
+    _get(**kwargs)  # Test _get
 
     saved = []
     for filename in os.listdir(tmpdir):
@@ -150,32 +226,57 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     &#34;&#34;&#34;Captures HTTPError and MaxRetryError exceptions.
     &#34;&#34;&#34;
 
-    urls, *req = _get_error_params[0]
+    kwargs = _get_error_params[0]
+    # Create tmpdir and set in kwargs
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    kwargs[&#39;dir&#39;] = tmpdir
+
+    # Register mock response
+    rsps = _get_error_params[1]
+    register_mock_responses(rsps)
+
+    _get(**kwargs)  # Test _get
+
+    shutil.rmtree(str(tmpdir))
+    assert all([str(r[&#39;status&#39;]) in caplog.text for r in rsps])
+
+
+@responses.activate
+def test_get_mock(get_mock_params, tmp_data_directory):
+    &#34;&#34;&#34;(Mock test) Downloads and saves every relevant DERA
+    dataset between start_date and end_date.
+    &#34;&#34;&#34;
+
+    dataset, *args = get_mock_params[0]
+    # Create tmpdir
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
 
-    rsps = _get_error_params[1][0]
-    responses.add(responses.Response(**rsps))
+    # Register mock response
+    rsps = get_mock_params[1]
+    register_mock_responses(rsps)
 
-    _get(urls, tmpdir, *req)
+    get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
+    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_mock_params[2]]
     shutil.rmtree(str(tmpdir))
-    assert str(rsps[&#39;status&#39;]) in caplog.text
+    assert all(saved)
 
 
 @pytest.mark.webtest
-def test_get(get_params, tmp_data_directory):
-    &#34;&#34;&#34;Downloads and saves files from DERA.
+def test_get_live(get_live_params, tmp_data_directory):
+    &#34;&#34;&#34;(Live test) Downloads and saves every relevant DERA dataset
+    between start_date and end_date.
     &#34;&#34;&#34;
 
-    dataset, *args = get_params[0]
+    dataset, *args = get_live_params[0]
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
 
-    get_DERA(dataset, tmpdir, *args)
-    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_params[1]]
+    get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
-    print(saved)
+    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_live_params[1]]
     shutil.rmtree(str(tmpdir))
     assert all(saved)
 
@@ -203,8 +304,8 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()</code></pre>
 </details>
 </dd>
-<dt id="getdera.tests.test_client.get_params"><code class="name flex">
-<span>def <span class="ident">get_params</span></span>(<span>request)</span>
+<dt id="getdera.tests.test_client.get_live_params"><code class="name flex">
+<span>def <span class="ident">get_live_params</span></span>(<span>request)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -212,62 +313,71 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get&#39;])
-def get_params(request):
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get_live&#39;])
+def get_live_params(request):
 
-    dataset, *args = request.param[&#39;args&#39;]
+    args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    return (dataset, *args), expected</code></pre>
+    return args, expected</code></pre>
 </details>
 </dd>
-<dt id="getdera.tests.test_client.test_get"><code class="name flex">
-<span>def <span class="ident">test_get</span></span>(<span>get_params, tmp_data_directory)</span>
+<dt id="getdera.tests.test_client.get_mock_params"><code class="name flex">
+<span>def <span class="ident">get_mock_params</span></span>(<span>request)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Downloads and saves files from DERA.</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@pytest.mark.webtest
-def test_get(get_params, tmp_data_directory):
-    &#34;&#34;&#34;Downloads and saves files from DERA.
-    &#34;&#34;&#34;
+<pre><code class="python">@pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;get_mock&#39;])
+def get_mock_params(request):
 
-    dataset, *args = get_params[0]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
-
-    get_DERA(dataset, tmpdir, *args)
-    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_params[1]]
-
-    print(saved)
-    shutil.rmtree(str(tmpdir))
-    assert all(saved)</code></pre>
+    args = request.param[&#39;args&#39;]
+    rsps = request.param[&#39;expected&#39;][0]
+    file_names = request.param[&#39;expected&#39;][1]
+    return args, rsps, file_names</code></pre>
+</details>
+</dd>
+<dt id="getdera.tests.test_client.register_mock_responses"><code class="name flex">
+<span>def <span class="ident">register_mock_responses</span></span>(<span>mocks)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def register_mock_responses(mocks):
+    for r in mocks:
+        responses.add(responses.Response(**r))</code></pre>
 </details>
 </dd>
 <dt id="getdera.tests.test_client.test_get_"><code class="name flex">
 <span>def <span class="ident">test_get_</span></span>(<span>_get_params, tmp_data_directory)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Downloads and saves files from test urls.</p></div>
+<div class="desc"><p>Downloads and saves body content from test urls.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@responses.activate
 def test_get_(_get_params, tmp_data_directory):
-    &#34;&#34;&#34;Downloads and saves files from test urls.
+    &#34;&#34;&#34;Downloads and saves body content from test urls.
     &#34;&#34;&#34;
-    urls, *req = _get_params[0]
+
+    kwargs = _get_params[0]
+    # Create tmpdir and set in kwargs
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
+    kwargs[&#39;dir&#39;] = tmpdir
 
+    # Mock responses content
     rsps = _get_params[1]
     contents = [r[&#39;body&#39;] for r in rsps]
-    for r in rsps:
-        responses.add(responses.Response(**r))
-    _get(urls, tmpdir, *req)
+    register_mock_responses(rsps)
+    _get(**kwargs)  # Test _get
 
     saved = []
     for filename in os.listdir(tmpdir):
@@ -294,17 +404,79 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
     &#34;&#34;&#34;Captures HTTPError and MaxRetryError exceptions.
     &#34;&#34;&#34;
 
-    urls, *req = _get_error_params[0]
+    kwargs = _get_error_params[0]
+    # Create tmpdir and set in kwargs
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+    kwargs[&#39;dir&#39;] = tmpdir
+
+    # Register mock response
+    rsps = _get_error_params[1]
+    register_mock_responses(rsps)
+
+    _get(**kwargs)  # Test _get
+
+    shutil.rmtree(str(tmpdir))
+    assert all([str(r[&#39;status&#39;]) in caplog.text for r in rsps])</code></pre>
+</details>
+</dd>
+<dt id="getdera.tests.test_client.test_get_live"><code class="name flex">
+<span>def <span class="ident">test_get_live</span></span>(<span>get_live_params, tmp_data_directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>(Live test) Downloads and saves every relevant DERA dataset
+between start_date and end_date.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@pytest.mark.webtest
+def test_get_live(get_live_params, tmp_data_directory):
+    &#34;&#34;&#34;(Live test) Downloads and saves every relevant DERA dataset
+    between start_date and end_date.
+    &#34;&#34;&#34;
+
+    dataset, *args = get_live_params[0]
     tmpdir = tmp_data_directory
     utils.make_path(tmpdir)
 
-    rsps = _get_error_params[1][0]
-    responses.add(responses.Response(**rsps))
+    get_DERA(dataset, tmpdir, *args)  # Test get_DERA
 
-    _get(urls, tmpdir, *req)
-
+    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_live_params[1]]
     shutil.rmtree(str(tmpdir))
-    assert str(rsps[&#39;status&#39;]) in caplog.text</code></pre>
+    assert all(saved)</code></pre>
+</details>
+</dd>
+<dt id="getdera.tests.test_client.test_get_mock"><code class="name flex">
+<span>def <span class="ident">test_get_mock</span></span>(<span>get_mock_params, tmp_data_directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>(Mock test) Downloads and saves every relevant DERA
+dataset between start_date and end_date.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@responses.activate
+def test_get_mock(get_mock_params, tmp_data_directory):
+    &#34;&#34;&#34;(Mock test) Downloads and saves every relevant DERA
+    dataset between start_date and end_date.
+    &#34;&#34;&#34;
+
+    dataset, *args = get_mock_params[0]
+    # Create tmpdir
+    tmpdir = tmp_data_directory
+    utils.make_path(tmpdir)
+
+    # Register mock response
+    rsps = get_mock_params[1]
+    register_mock_responses(rsps)
+
+    get_DERA(dataset, tmpdir, *args)  # Test get_DERA
+
+    saved = [os.path.isfile(f&#39;{tmpdir}/{f}&#39;) for f in get_mock_params[2]]
+    shutil.rmtree(str(tmpdir))
+    assert all(saved)</code></pre>
 </details>
 </dd>
 </dl>
@@ -326,10 +498,13 @@ def test_get_error(_get_error_params, tmp_data_directory, caplog):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="getdera.tests.test_client.assert_status_hook" href="#getdera.tests.test_client.assert_status_hook">assert_status_hook</a></code></li>
-<li><code><a title="getdera.tests.test_client.get_params" href="#getdera.tests.test_client.get_params">get_params</a></code></li>
-<li><code><a title="getdera.tests.test_client.test_get" href="#getdera.tests.test_client.test_get">test_get</a></code></li>
+<li><code><a title="getdera.tests.test_client.get_live_params" href="#getdera.tests.test_client.get_live_params">get_live_params</a></code></li>
+<li><code><a title="getdera.tests.test_client.get_mock_params" href="#getdera.tests.test_client.get_mock_params">get_mock_params</a></code></li>
+<li><code><a title="getdera.tests.test_client.register_mock_responses" href="#getdera.tests.test_client.register_mock_responses">register_mock_responses</a></code></li>
 <li><code><a title="getdera.tests.test_client.test_get_" href="#getdera.tests.test_client.test_get_">test_get_</a></code></li>
 <li><code><a title="getdera.tests.test_client.test_get_error" href="#getdera.tests.test_client.test_get_error">test_get_error</a></code></li>
+<li><code><a title="getdera.tests.test_client.test_get_live" href="#getdera.tests.test_client.test_get_live">test_get_live</a></code></li>
+<li><code><a title="getdera.tests.test_client.test_get_mock" href="#getdera.tests.test_client.test_get_mock">test_get_mock</a></code></li>
 </ul>
 </li>
 </ul>

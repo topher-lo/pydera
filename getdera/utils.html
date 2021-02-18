@@ -31,11 +31,76 @@
 &#34;&#34;&#34;
 
 import os
+import pandas as pd
+import dateutil.parser
 
+from datetime import date
 from zipfile import ZipFile
 
 from typing import Union
 from typing import List
+from typing import Tuple
+
+
+STRFTIME_FORMATS = {
+    &#39;date&#39;: &#39;%Y-%m-%d&#39;,
+    &#39;year_quarter&#39;: &#39;%Yq%q&#39;,
+    &#39;year_month&#39;: &#39;%Y_%m&#39;,
+}  # Striftime formats used in getdera
+
+
+def get_start_end_strftimes(
+        start_date: str,
+        end_date: str,
+        format: str = STRFTIME_FORMATS[&#39;date&#39;]) -&gt; Tuple[str]:
+    &#34;&#34;&#34;Returns start_date and end_date as formatted strings for internal use.
+    If end_date is not specified, returns end_date as current day&#39;s
+    formatted strftime.
+    &#34;&#34;&#34;
+    # Convert datetime string to %d-%m-$Y format
+    start_date = dateutil.parser\
+                         .parse(start_date, dayfirst=True)\
+                         .strftime(format)
+    if not(end_date):
+        end_date = date.today().strftime(format)
+    else:
+        end_date = dateutil.parser\
+                           .parse(end_date, dayfirst=True)\
+                           .strftime(format)
+    return start_date, end_date
+
+
+def get_quarters(start_date: str,
+                 end_date: Union[None, str],
+                 format: str = STRFTIME_FORMATS[&#39;year_quarter&#39;]) -&gt; List[str]:
+    &#34;&#34;&#34;Returns list of quarters (as formatted strings) between start_end
+    and end_date. Uses quarter start frequency such that the list includes
+    end_date&#39;s quarter.
+    &#34;&#34;&#34;
+    # Get list of quarters between start_date and end_date
+    quarters = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                             pd.to_datetime(end_date, dayfirst=True),
+                             freq=&#39;QS&#39;).to_period(&#39;Q&#39;)\
+                                       .strftime(format)\
+                                       .to_list()
+    return quarters
+
+
+def get_year_months(
+        start_date: str,
+        end_date: Union[None, str],
+        format: str = STRFTIME_FORMATS[&#39;year_month&#39;]) -&gt; List[str]:
+    &#34;&#34;&#34;Returns list of months (as formatted strings) between start_end
+    and end_date. Uses month start frequency such that the list
+    includes end_date&#39;s month.
+    &#34;&#34;&#34;
+    # Get list of months by year between start_date and end_date
+    year_months = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                                pd.to_datetime(end_date, dayfirst=True),
+                                freq=&#39;MS&#39;).to_period(&#39;M&#39;)\
+                                          .strftime(format)\
+                                          .to_list()
+    return year_months
 
 
 def unzip(zipfile: str, filename: Union[str, List[str]], path: str) -&gt; None:
@@ -87,6 +152,93 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="getdera.utils.get_quarters"><code class="name flex">
+<span>def <span class="ident">get_quarters</span></span>(<span>start_date: str, end_date: Union[NoneType, str], format: str = '%Yq%q') ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns list of quarters (as formatted strings) between start_end
+and end_date. Uses quarter start frequency such that the list includes
+end_date's quarter.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_quarters(start_date: str,
+                 end_date: Union[None, str],
+                 format: str = STRFTIME_FORMATS[&#39;year_quarter&#39;]) -&gt; List[str]:
+    &#34;&#34;&#34;Returns list of quarters (as formatted strings) between start_end
+    and end_date. Uses quarter start frequency such that the list includes
+    end_date&#39;s quarter.
+    &#34;&#34;&#34;
+    # Get list of quarters between start_date and end_date
+    quarters = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                             pd.to_datetime(end_date, dayfirst=True),
+                             freq=&#39;QS&#39;).to_period(&#39;Q&#39;)\
+                                       .strftime(format)\
+                                       .to_list()
+    return quarters</code></pre>
+</details>
+</dd>
+<dt id="getdera.utils.get_start_end_strftimes"><code class="name flex">
+<span>def <span class="ident">get_start_end_strftimes</span></span>(<span>start_date: str, end_date: str, format: str = '%Y-%m-%d') ‑> Tuple[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns start_date and end_date as formatted strings for internal use.
+If end_date is not specified, returns end_date as current day's
+formatted strftime.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_start_end_strftimes(
+        start_date: str,
+        end_date: str,
+        format: str = STRFTIME_FORMATS[&#39;date&#39;]) -&gt; Tuple[str]:
+    &#34;&#34;&#34;Returns start_date and end_date as formatted strings for internal use.
+    If end_date is not specified, returns end_date as current day&#39;s
+    formatted strftime.
+    &#34;&#34;&#34;
+    # Convert datetime string to %d-%m-$Y format
+    start_date = dateutil.parser\
+                         .parse(start_date, dayfirst=True)\
+                         .strftime(format)
+    if not(end_date):
+        end_date = date.today().strftime(format)
+    else:
+        end_date = dateutil.parser\
+                           .parse(end_date, dayfirst=True)\
+                           .strftime(format)
+    return start_date, end_date</code></pre>
+</details>
+</dd>
+<dt id="getdera.utils.get_year_months"><code class="name flex">
+<span>def <span class="ident">get_year_months</span></span>(<span>start_date: str, end_date: Union[NoneType, str], format: str = '%Y_%m') ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns list of months (as formatted strings) between start_end
+and end_date. Uses month start frequency such that the list
+includes end_date's month.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_year_months(
+        start_date: str,
+        end_date: Union[None, str],
+        format: str = STRFTIME_FORMATS[&#39;year_month&#39;]) -&gt; List[str]:
+    &#34;&#34;&#34;Returns list of months (as formatted strings) between start_end
+    and end_date. Uses month start frequency such that the list
+    includes end_date&#39;s month.
+    &#34;&#34;&#34;
+    # Get list of months by year between start_date and end_date
+    year_months = pd.date_range(pd.to_datetime(start_date, dayfirst=True),
+                                pd.to_datetime(end_date, dayfirst=True),
+                                freq=&#39;MS&#39;).to_period(&#39;M&#39;)\
+                                          .strftime(format)\
+                                          .to_list()
+    return year_months</code></pre>
+</details>
+</dd>
 <dt id="getdera.utils.make_path"><code class="name flex">
 <span>def <span class="ident">make_path</span></span>(<span>path: str) ‑> str</span>
 </code></dt>
@@ -179,6 +331,9 @@ None</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="getdera.utils.get_quarters" href="#getdera.utils.get_quarters">get_quarters</a></code></li>
+<li><code><a title="getdera.utils.get_start_end_strftimes" href="#getdera.utils.get_start_end_strftimes">get_start_end_strftimes</a></code></li>
+<li><code><a title="getdera.utils.get_year_months" href="#getdera.utils.get_year_months">get_year_months</a></code></li>
 <li><code><a title="getdera.utils.make_path" href="#getdera.utils.make_path">make_path</a></code></li>
 <li><code><a title="getdera.utils.unzip" href="#getdera.utils.unzip">unzip</a></code></li>
 </ul>

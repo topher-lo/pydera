@@ -73,13 +73,19 @@ import os
 import pandas as pd
 import tempfile
 
-import dateutil.parser
-
-from datetime import date
 from tqdm import tqdm
 from typing import Dict
 
 from getdera.utils import unzip
+from getdera.utils import get_start_end_strftimes
+from getdera.utils import get_quarters
+from getdera.utils import get_year_months
+
+
+DERA_DATA_EXT = {
+    &#39;risk&#39;: &#39;_rr1.zip&#39;,
+    &#39;statements&#39;: &#39;_notes.zip&#39;,
+}  # DERA dataset identifier and extension
 
 
 def _process_tag(tmpdir: str) -&gt; pd.DataFrame:
@@ -132,6 +138,7 @@ def _process_txt(tmpdir: str, dtype: Dict[str, str] = None) -&gt; pd.DataFrame:
 
 
 def process(dir: str,
+            dataset: str,
             table: str,
             start_date: str,
             end_date: str = None,
@@ -142,6 +149,12 @@ def process(dir: str,
     Args:
         dir (str): 
             Path to directory containg DERA datasets as zipfiles.
+
+        dataset (str): 
+            DERA dataset to process.
+            Supported datasets include:
+                - &#39;statements&#39;: Financial Statements and Notes
+                - &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -181,40 +194,44 @@ def process(dir: str,
         Pandas DataFrame -- Processed tables inside DERA dataset zipfiles.
     &#34;&#34;&#34;
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime(&#39;%d-%m-%Y&#39;)
-    if not(end_date):
-        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
-    else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime(&#39;%d-%m-%Y&#39;)
-    end_date = end_date
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
-                                        .strftime(&#39;%Yq%q&#39;)\
-                                        .to_list()
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == &#39;statements&#39; and end_date &gt;= &#39;2020-10-01&#39;:
+        quarters_range = get_quarters(start_date, &#39;2020-09-01&#39;)
+        months_range = get_year_months(&#39;2020-10-01&#39;, end_date)
+        date_range = quarters_range + months_range
+    else:
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
+
+    # Get list of relevant file names
+    ext = DERA_DATA_EXT[dataset]  # Dataset identifer and extension
+    relevant_files = [f&#39;{date}{ext}&#39; for date in date_range]
+    relevant_file_paths = [os.path.join(dir, f) for f in os.listdir(dir)
+                           if f in relevant_files]
+
+    # If no relevant files downloaded
+    if not(relevant_file_paths):
+        raise FileNotFoundError(&#39;No downloaded DERA datasets between &#39;
+                                &#39;start date and end date.&#39;)
 
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
         # Unzip tables into tmp dir
-        for f in os.listdir(dir):
-            path = os.path.join(dir, f)
-            if any(q in path for q in date_range):
-                unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
-                dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
-                          f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
-        
+        for i in range(len(relevant_files)):
+            path = relevant_file_paths[i]
+            f = relevant_files[i]
+            unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
+            dataset_name = f.split(&#39;.&#39;)[0]
+            os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
+                      f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
+
         # Process specified table
         if table == &#39;tag&#39;:
             data = _process_tag(tmpdir)
-        
+
         elif table == &#39;sub&#39;:
             data = _process_sub(tmpdir, dtype)
 
@@ -232,7 +249,7 @@ def process(dir: str,
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="getdera.dera.process"><code class="name flex">
-<span>def <span class="ident">process</span></span>(<span>dir: str, table: str, start_date: str, end_date: str = None, dtype: Dict[str, str] = None) ‑> pandas.core.frame.DataFrame</span>
+<span>def <span class="ident">process</span></span>(<span>dir: str, dataset: str, table: str, start_date: str, end_date: str = None, dtype: Dict[str, str] = None) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Processes DERA dataset zipfiles found in dir for quarters between
@@ -241,6 +258,11 @@ start_date and end_date.</p>
 <dl>
 <dt><strong><code>dir</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path to directory containg DERA datasets as zipfiles.</dd>
+<dt><strong><code>dataset</code></strong> :&ensp;<code>str</code></dt>
+<dd>DERA dataset to process.
+Supported datasets include:
+- 'statements': Financial Statements and Notes
+- 'risk': Mutual Fund Prospectus Risk and Return Summary</dd>
 <dt><strong><code>table</code></strong> :&ensp;<code>str</code></dt>
 <dd>
 <p>Tables in datasets to process.
@@ -293,6 +315,7 @@ string format.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def process(dir: str,
+            dataset: str,
             table: str,
             start_date: str,
             end_date: str = None,
@@ -303,6 +326,12 @@ string format.
     Args:
         dir (str): 
             Path to directory containg DERA datasets as zipfiles.
+
+        dataset (str): 
+            DERA dataset to process.
+            Supported datasets include:
+                - &#39;statements&#39;: Financial Statements and Notes
+                - &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -342,40 +371,44 @@ string format.
         Pandas DataFrame -- Processed tables inside DERA dataset zipfiles.
     &#34;&#34;&#34;
 
-    # Convert datetime string to %d-%m-$Y format
-    start_date = dateutil.parser\
-                         .parse(start_date)\
-                         .strftime(&#39;%d-%m-%Y&#39;)
-    if not(end_date):
-        end_date = date.today().strftime(&#39;%d-%m-%Y&#39;)
-    else:
-        end_date = dateutil.parser\
-                           .parse(end_date)\
-                           .strftime(&#39;%d-%m-%Y&#39;)
-    end_date = end_date
+    # Start date and end date strftimes
+    start_date, end_date = get_start_end_strftimes(start_date, end_date)
 
-    # Get list of quarters between start_date and end_date
-    start_end_dates = pd.to_datetime([start_date, end_date])
-    date_range = pd.date_range(*(start_end_dates) + pd.offsets.QuarterEnd(),
-                               freq=&#39;Q&#39;).to_period(&#39;Q&#39;)\
-                                        .strftime(&#39;%Yq%q&#39;)\
-                                        .to_list()
+    # If statements dataset and end_date on or after 2020-10-01
+    if dataset == &#39;statements&#39; and end_date &gt;= &#39;2020-10-01&#39;:
+        quarters_range = get_quarters(start_date, &#39;2020-09-01&#39;)
+        months_range = get_year_months(&#39;2020-10-01&#39;, end_date)
+        date_range = quarters_range + months_range
+    else:
+        # Get list of quarters between start_date and end_date
+        date_range = get_quarters(start_date, end_date)
+
+    # Get list of relevant file names
+    ext = DERA_DATA_EXT[dataset]  # Dataset identifer and extension
+    relevant_files = [f&#39;{date}{ext}&#39; for date in date_range]
+    relevant_file_paths = [os.path.join(dir, f) for f in os.listdir(dir)
+                           if f in relevant_files]
+
+    # If no relevant files downloaded
+    if not(relevant_file_paths):
+        raise FileNotFoundError(&#39;No downloaded DERA datasets between &#39;
+                                &#39;start date and end date.&#39;)
 
     # Create tmp dir
     with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as tmpdir:
         # Unzip tables into tmp dir
-        for f in os.listdir(dir):
-            path = os.path.join(dir, f)
-            if any(q in path for q in date_range):
-                unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
-                dataset_name = f.split(&#39;.&#39;)[0]
-                os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
-                          f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
-        
+        for i in range(len(relevant_files)):
+            path = relevant_file_paths[i]
+            f = relevant_files[i]
+            unzip(f&#39;{path}&#39;, f&#39;{table}.tsv&#39;, tmpdir)
+            dataset_name = f.split(&#39;.&#39;)[0]
+            os.rename(f&#39;{tmpdir}/{table}.tsv&#39;,
+                      f&#39;{tmpdir}/{dataset_name}_{table}.tsv&#39;)
+
         # Process specified table
         if table == &#39;tag&#39;:
             data = _process_tag(tmpdir)
-        
+
         elif table == &#39;sub&#39;:
             data = _process_sub(tmpdir, dtype)
 

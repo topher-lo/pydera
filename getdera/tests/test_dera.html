@@ -36,15 +36,17 @@ from pandas.testing import assert_frame_equal
 from getdera.dera import process
 
 
-### TESTCASES
+# TESTCASES
 
 TEST_DATA_PATH = &#39;getdera/tests/data&#39;
 
 TESTCASES = {
     &#39;process_tag&#39;: [
         {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;risk&#39;,
                   &#39;tag&#39;,
-                  &#39;01-01-2020&#39;),
+                  &#39;01-01-2020&#39;,
+                  &#39;01-03-2020&#39;),
          &#39;expected&#39;: pd.DataFrame({
              &#39;tag&#39;: [&#39;AcquiredFundFeesAndExpensesBasedOnEstimates&#39;,
                      &#39;AmendmentFlag&#39;,
@@ -64,6 +66,7 @@ TESTCASES = {
     ],
     &#39;process_sub&#39;: [
         {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;risk&#39;,
                   &#39;sub&#39;,
                   &#39;01-10-2019&#39;,
                   &#39;15-12-2019&#39;),
@@ -77,6 +80,7 @@ TESTCASES = {
     ],
     &#39;process&#39;: [
         {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;risk&#39;,
                   &#39;txt&#39;,
                   &#39;01-07-2019&#39;,
                   &#39;15-12-2019&#39;),
@@ -87,6 +91,7 @@ TESTCASES = {
              &#39;dummy_val&#39;: [&#39;lorem2019q3&#39;, None, &#39;ipsum2019q3&#39;,
                            &#39;lorem2019q4&#39;, None, &#39;ipsum2019q4&#39;]})},
         {&#39;args&#39;: (f&#39;{TEST_DATA_PATH}&#39;,
+                  &#39;risk&#39;,
                   &#39;txt&#39;,
                   &#39;01-10-2019&#39;,
                   &#39;15-01-2020&#39;),
@@ -99,7 +104,7 @@ TESTCASES = {
     ],
 }
 
-### FIXTURES
+# FIXTURES
 
 @pytest.fixture(scope=&#39;function&#39;, params=TESTCASES[&#39;process_tag&#39;])
 def process_tag_params(request, tmp_data_directory):
@@ -128,7 +133,7 @@ def process_params(request, tmp_data_directory):
     return args, expected
 
 
-### UNIT TESTS
+# UNIT TESTS
 
 def test_process_tag(process_tag_params):
     result = process(*process_tag_params[0])
