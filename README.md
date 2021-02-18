@@ -63,11 +63,13 @@ with tempfile.TemporaryDirectory(dir=DIR) as tmpdir:
                     END_DATE)
     # Process SUB data in tempdir
     DATA['sub'] = dera.process(tmpdir,
+                               DATASET,
                                'sub',
                                START_DATE,
                                END_DATE)
     # Process TXT data in tempdir
     DATA['txt'] = dera.process(tmpdir,
+                               DATASET,
                                'txt',
                                START_DATE,
                                END_DATE,
