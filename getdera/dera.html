@@ -25,15 +25,21 @@ produced by the SEC&#39;s Divison of Economic and Risk Analysis …" />
 <section id="section-intro">
 <p>The <code>dera</code> module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.</p>
-<p>Supported datasets from DERA include:
-1. Mutual Fund Prospectus Risk and Return Summary
-2. Financial Statements and Notes</p>
-<p>Links to supported datasets:
-1. <a href="https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets">https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets</a>
-2. <a href="https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html">https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html</a></p>
-<p>Links to documentation for supported datasets:
-1. <a href="https://www.sec.gov/dera/data/rr1.pdf">https://www.sec.gov/dera/data/rr1.pdf</a>
-2. <a href="https://www.sec.gov/files/aqfsn_1.pdf">https://www.sec.gov/files/aqfsn_1.pdf</a></p>
+<p>Supported datasets from DERA include:</p>
+<ol>
+<li>Mutual Fund Prospectus Risk and Return Summary</li>
+<li>Financial Statements and Notes</li>
+</ol>
+<p>Links to supported datasets:</p>
+<ol>
+<li><a href="https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets">https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets</a></li>
+<li><a href="https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html">https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html</a></li>
+</ol>
+<p>Links to documentation for supported datasets:</p>
+<ol>
+<li><a href="https://www.sec.gov/dera/data/rr1.pdf">https://www.sec.gov/dera/data/rr1.pdf</a></li>
+<li><a href="https://www.sec.gov/files/aqfsn_1.pdf">https://www.sec.gov/files/aqfsn_1.pdf</a></li>
+</ol>
 <p>Note:
 Each dataset from DERA is a zipfile that contains multiple files in a
 tabular format (e.g. tab-separated values file).
@@ -47,15 +53,15 @@ Each file represents a different data table.</p>
 <pre><code class="python">&#34;&#34;&#34;The `dera` module contains functions to process structured datasets
 produced by the SEC&#39;s Divison of Economic and Risk Analysis.
 
-Supported datasets from DERA include:
+Supported datasets from DERA include:\n
 1. Mutual Fund Prospectus Risk and Return Summary
 2. Financial Statements and Notes
 
-Links to supported datasets:
+Links to supported datasets:\n
 1. https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
 2. https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html
 
-Links to documentation for supported datasets:
+Links to documentation for supported datasets:\n
 1. https://www.sec.gov/dera/data/rr1.pdf
 2. https://www.sec.gov/files/aqfsn_1.pdf
 
@@ -152,9 +158,9 @@ def process(dir: str,
 
         dataset (str): 
             DERA dataset to process.
-            Supported datasets include:
-                - &#39;statements&#39;: Financial Statements and Notes
-                - &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
+            Supported datasets include:\n
+            1. &#39;statements&#39;: Financial Statements and Notes
+            2. &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -162,7 +168,7 @@ def process(dir: str,
 
             - &#39;tag&#39; -- tag.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
-                2. Financial Statements and Notes.
+                2. Financial Statements and Notes
 
             - &#39;sub&#39; -- sub.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
@@ -238,7 +244,11 @@ def process(dir: str,
         elif table == &#39;txt&#39;:
             data = _process_txt(tmpdir, dtype)
 
-    return data</code></pre>
+    return data
+
+
+if __name__ == &#34;__main__&#34;:
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -259,10 +269,14 @@ start_date and end_date.</p>
 <dt><strong><code>dir</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path to directory containg DERA datasets as zipfiles.</dd>
 <dt><strong><code>dataset</code></strong> :&ensp;<code>str</code></dt>
-<dd>DERA dataset to process.
-Supported datasets include:
-- 'statements': Financial Statements and Notes
-- 'risk': Mutual Fund Prospectus Risk and Return Summary</dd>
+<dd>
+<p>DERA dataset to process.
+Supported datasets include:</p>
+<ol>
+<li>'statements': Financial Statements and Notes</li>
+<li>'risk': Mutual Fund Prospectus Risk and Return Summary</li>
+</ol>
+</dd>
 <dt><strong><code>table</code></strong> :&ensp;<code>str</code></dt>
 <dd>
 <p>Tables in datasets to process.
@@ -272,7 +286,7 @@ Supported tables (and corresponding datasets) include:</p>
 <p>'tag' &ndash; tag.tsv files in:</p>
 <ol>
 <li>Mutual Fund Prospectus Risk and Return Summary</li>
-<li>Financial Statements and Notes.</li>
+<li>Financial Statements and Notes</li>
 </ol>
 </li>
 <li>
@@ -329,9 +343,9 @@ string format.
 
         dataset (str): 
             DERA dataset to process.
-            Supported datasets include:
-                - &#39;statements&#39;: Financial Statements and Notes
-                - &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
+            Supported datasets include:\n
+            1. &#39;statements&#39;: Financial Statements and Notes
+            2. &#39;risk&#39;: Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -339,7 +353,7 @@ string format.
 
             - &#39;tag&#39; -- tag.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
-                2. Financial Statements and Notes.
+                2. Financial Statements and Notes
 
             - &#39;sub&#39; -- sub.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
