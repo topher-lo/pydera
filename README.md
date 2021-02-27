@@ -29,7 +29,11 @@ Downloading aggregated datasets from the SEC's Division of Economic and Risk Ana
 - `responses`
 - `zipfile`
 
-To use `pydera`, you must first clone this repo and install its dependencies using `pip`.
+The latest release can be installed using pip:
+```
+pip install pydera
+```
+The main branch can be installed locally by cloning the repo and installing its dependencies:
 ```
 git clone git@github.com:topher-lo/pydera.git
 cd [..path/to/repo]
@@ -95,7 +99,6 @@ In particular, I believe the `TXT` tables (from the mutual fund prospectus datas
 - Build visualisation of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
-- Upload package to PyPi
     
 ## Contributing
 Found a bug? Wrote a patch? Have an idea on how to use DERA's datasets for a data science project? Please checkout the brief [contribution guide](https://github.com/topher-lo/pydera/blob/main/CONTRIBUTING.md). Any and all contributions are welcome. :heart: :snake: :raised_hands:
