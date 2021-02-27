@@ -4,7 +4,7 @@ webscrapping within the SEC EDGAR's Fair Access policy.
 
 Datasets are found at https://www.sec.gov/files/dera/data
 
-Paths to specific datasets:
+Paths to specific datasets:\n
 1. Financial Statements and Notes -- `financial-statement-and-notes-data-sets/zipfile`
 2. Mutual Fund Prospectuses -- `mutual-fund-prospectus-risk/return-summary-data-sets/zipfile`
 

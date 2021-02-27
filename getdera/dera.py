@@ -1,15 +1,15 @@
 """The `dera` module contains functions to process structured datasets
 produced by the SEC's Divison of Economic and Risk Analysis.
 
-Supported datasets from DERA include:
+Supported datasets from DERA include:\n
 1. Mutual Fund Prospectus Risk and Return Summary
 2. Financial Statements and Notes
 
-Links to supported datasets:
+Links to supported datasets:\n
 1. https://www.sec.gov/dera/data/mutual-fund-prospectus-risk-return-summary-data-sets
 2. https://www.sec.gov/dera/data/financial-statement-and-notes-data-set.html
 
-Links to documentation for supported datasets:
+Links to documentation for supported datasets:\n
 1. https://www.sec.gov/dera/data/rr1.pdf
 2. https://www.sec.gov/files/aqfsn_1.pdf
 
@@ -193,3 +193,7 @@ def process(dir: str,
             data = _process_txt(tmpdir, dtype)
 
     return data
+
+
+if __name__ == "__main__":
+    pass
