@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - 'README.md'
       - 'CONTRIBUTING.md'
-      - 'requirements.txt'
       - '.gitattributes'
       - '.gitignore'
       - 'notebooks/**'
