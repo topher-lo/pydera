@@ -15,8 +15,7 @@ setup(
                       "pandas",
                       "requests",
                       "requests-toolbelt",
-                      "tqdm",
-                      "zipfile"],
+                      "tqdm"],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Financial and Insurance Industry",
