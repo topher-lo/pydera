@@ -7,7 +7,7 @@
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/)
 
-Downloading aggregated datasets from the SEC's Division of Economic and Risk Analysis.
+Downloading and processing aggregated datasets from the SEC's Division of Economic and Risk Analysis.
 
 ## Features
 - Webscrapes structured datasets from the DERA's data library (https://www.sec.gov/dera/data)
@@ -22,13 +22,6 @@ Downloading aggregated datasets from the SEC's Division of Economic and Risk Ana
 - Documentation found [here](https://topher-lo.github.io/pydera/getdera/).
 
 ## Install
-`pydera` depends on the following packages:
-- `pandas`
-- `requests`
-- `requests-toolbelt`
-- `responses`
-- `zipfile`
-
 The latest release can be installed using pip:
 ```
 pip install pydera

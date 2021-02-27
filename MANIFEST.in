@@ -1,0 +1,9 @@
+include *.md
+include *.py
+include *.txt
+include LICENSE
+include pytest.ini
+recursive-include getdera *.md
+recursive-include getdera *.py
+recursive-include getdera *.zip
+recursive-include notebooks *.ipynb
