@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='pydera',
-    version='0.0.1',
+    version='0.0.2',
     description='Tools for downloading and processing aggregated datasets from'
                 ' the SEC\'s Division of Economic and Risk Analysis',
     packages=['getdera'],
