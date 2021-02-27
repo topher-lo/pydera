@@ -1,5 +1,10 @@
 from setuptools import setup
 
+
+with open("README.md", "r") as f:
+    long_description = f.read()
+
+
 setup(
     name='pydera',
     version='0.0.1',
@@ -25,5 +30,23 @@ setup(
         "Topic :: Office/Business :: Financial",
         "Topic :: Office/Business :: Financial :: Investment",
     ],
-
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    tests_require=["pytest"],
+    extras_require={
+        "dev": [
+            "pytest",
+            "responses",
+            "check-manifest",
+            "wheel",
+        ]
+    },
+    python_requires=">=3.7",
+    project_urls={
+        "Documentation": "https://topher-lo.github.io/pydera/getdera/",
+        "Issues": "https://github.com/topher-lo/pydera/issues",
+    },
+    url="https://github.com/topher-lo/pydera",
+    author="Christopher Lo",
+    author_email="lochristopherhy@gmail.com",
 )

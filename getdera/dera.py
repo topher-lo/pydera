@@ -106,9 +106,9 @@ def process(dir: str,
 
         dataset (str): 
             DERA dataset to process.
-            Supported datasets include:
-                - 'statements': Financial Statements and Notes
-                - 'risk': Mutual Fund Prospectus Risk and Return Summary
+            Supported datasets include:\n
+            1. 'statements': Financial Statements and Notes
+            2. 'risk': Mutual Fund Prospectus Risk and Return Summary
 
         table (str): 
             Tables in datasets to process.
@@ -116,7 +116,7 @@ def process(dir: str,
 
             - 'tag' -- tag.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
-                2. Financial Statements and Notes.
+                2. Financial Statements and Notes
 
             - 'sub' -- sub.tsv files in:
                 1. Mutual Fund Prospectus Risk and Return Summary
