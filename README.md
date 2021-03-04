@@ -1,9 +1,9 @@
 # pydera
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 [![codecov](https://codecov.io/gh/topher-lo/pydera/branch/main/graph/badge.svg?token=MURPG4B3J0)](https://codecov.io/gh/topher-lo/pydera)
-[![Generic badge](https://img.shields.io/badge/version-v0.01-4B8BBE.svg)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/topher-lo/pydera)
 [![Open in nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/topher-lo/pydera)
+[![PyPI version](https://badge.fury.io/py/pydera.svg)](https://badge.fury.io/py/pydera)
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/)
 
@@ -88,4 +88,4 @@ In particular, I believe the `TXT` tables (from the mutual fund prospectus datas
     - To improve clarity of the information provided by DERA
     
 ## Contributing
-Found a bug? Wrote a patch? Have an idea on how to use DERA's datasets for a data science project? Please checkout the brief [contribution guide](https://github.com/topher-lo/pydera/blob/main/CONTRIBUTING.md). Any and all contributions are welcome. :heart: :snake: :raised_hands:
+Found a bug? Wrote a patch? Have an idea on how to use DERA's datasets for a data science project? Please checkout the brief [contribution guide](https://github.com/topher-lo/pydera/blob/main/CONTRIBUTING.md). Any and all contributions are welcome. ❤️ 🐍 🙌
