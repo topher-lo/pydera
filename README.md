@@ -83,13 +83,7 @@ The aggregated data from DERA is structured, cleaned, and provides columns of da
 In particular, I believe the `TXT` tables (from the mutual fund prospectus dataset and financial statements datasets) provide a large corpus of textual financial information. This corpus can be immediately usable for natural language processing (NLP) tasks. These tables also present a time-dimension to NLP analysis.
 
 ## Roadmap
-- Build a metric of a mutual fund's "riskiness" to an investor according to its:
-    - Objectives, risk narrative, and strategy narrative textual information
-    - Sharpe ratio
-    - Volatility
-- Matching mutual fund objectives, risk narratives, and strategy narratives to Q&A in an investor risk profiling questionnaire (https://www.citibank.com.hk/english/investment/pdf/IRPQ_ICPQ_Eng.pdf)
-- Create streamlit webapp that matches an investor (according to their answers in a risk profiling questionnaire) to an appropriate mutual fund)
-- Build visualisation of data relationships between tables within DERA datasets
+- Build visualisations of data relationships between tables within DERA datasets
     - To support data processing
     - To improve clarity of the information provided by DERA
     
