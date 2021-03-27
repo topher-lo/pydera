@@ -82,8 +82,6 @@ TESTCASES = {
 def process_tag_params(request, tmp_data_directory):
     args = request.param['args']
     expected = request.param['expected']
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
@@ -91,8 +89,6 @@ def process_tag_params(request, tmp_data_directory):
 def process_sub_params(request, tmp_data_directory):
     args = request.param['args']
     expected = request.param['expected']
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
@@ -100,8 +96,6 @@ def process_sub_params(request, tmp_data_directory):
 def process_params(request, tmp_data_directory):
     args = request.param['args']
     expected = request.param['expected']
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
