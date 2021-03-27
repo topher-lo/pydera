@@ -110,8 +110,6 @@ TESTCASES = {
 def process_tag_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
@@ -119,8 +117,6 @@ def process_tag_params(request, tmp_data_directory):
 def process_sub_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
@@ -128,8 +124,6 @@ def process_sub_params(request, tmp_data_directory):
 def process_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected
 
 
@@ -175,8 +169,6 @@ def test_process(process_params):
 def process_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected</code></pre>
 </details>
 </dd>
@@ -193,8 +185,6 @@ def process_params(request, tmp_data_directory):
 def process_sub_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected</code></pre>
 </details>
 </dd>
@@ -211,8 +201,6 @@ def process_sub_params(request, tmp_data_directory):
 def process_tag_params(request, tmp_data_directory):
     args = request.param[&#39;args&#39;]
     expected = request.param[&#39;expected&#39;]
-    tmpdir = tmp_data_directory
-    utils.make_path(tmpdir)
     return args, expected</code></pre>
 </details>
 </dd>
