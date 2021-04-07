@@ -4,8 +4,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/topher-lo/pydera)
 [![Open in nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/topher-lo/pydera)
 [![PyPI version](https://badge.fury.io/py/pydera.svg)](https://badge.fury.io/py/pydera)
-[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/)
-[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/)
+![versions](https://img.shields.io/pypi/pyversions/pydera.svg)
 
 Downloading and processing aggregated datasets from the SEC's Division of Economic and Risk Analysis.
 
