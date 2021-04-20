@@ -1,5 +1,5 @@
 # pydera
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
+[![MIT License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/topher-lo/pydera/branch/main/graph/badge.svg?token=MURPG4B3J0)](https://codecov.io/gh/topher-lo/pydera)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/topher-lo/pydera)
 [![Open in nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/topher-lo/pydera)
