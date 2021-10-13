@@ -51,23 +51,29 @@ DATA = {} # Data dictionary
 
 with tempfile.TemporaryDirectory(dir=DIR) as tmpdir:
     # Download data and save in tempdir
-    client.get_DERA(DATASET,
-                    tmpdir,
-                    START_DATE,
-                    END_DATE)
+    client.get_DERA(
+        DATASET,
+        tmpdir,
+        START_DATE,
+        END_DATE
+    )
     # Process SUB data in tempdir
-    DATA['sub'] = dera.process(tmpdir,
-                               DATASET,
-                               'sub',
-                               START_DATE,
-                               END_DATE)
+    DATA['sub'] = dera.process(
+        tmpdir,
+        DATASET,
+        'sub',
+        START_DATE,
+        END_DATE
+    )
     # Process TXT data in tempdir
-    DATA['txt'] = dera.process(tmpdir,
-                               DATASET,
-                               'txt',
-                               START_DATE,
-                               END_DATE,
-                               dtype={'document': str, 'txtlen': int})
+    DATA['txt'] = dera.process(
+        tmpdir,
+        DATASET,
+        'txt',
+        START_DATE,
+        END_DATE,
+        dtype={'document': str, 'txtlen': int}
+    )
 ```
 
 ## Background
