@@ -19,10 +19,6 @@ Downloading and processing aggregated datasets from the SEC's Division of Econom
 - Documentation found [here](https://topher-lo.github.io/pydera/getdera/).
 
 ## Install
-The latest release can be installed using pip:
-```bash
-pip install pydera
-```
 The main branch can be installed locally by cloning the repo and installing its dependencies:
 ```bash
 git clone git@github.com:topher-lo/pydera.git
